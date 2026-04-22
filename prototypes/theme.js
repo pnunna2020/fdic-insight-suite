@@ -16,32 +16,6 @@
         '--coral':'#fb7185','--crimson':'#ef4444',
       }
     },
-    dark: {
-      label: 'Graphite',
-      desc:  'Near-black with neutral greys and cool accent',
-      vars: {
-        '--bg-0':'#0b0b0d','--bg-1':'#121215','--bg-2':'#17171b',
-        '--surface':'rgba(32,32,40,.62)','--surface-2':'rgba(40,40,50,.72)','--surface-3':'rgba(18,18,22,.92)',
-        '--border':'rgba(180,180,200,.12)','--border-strong':'rgba(200,200,220,.28)',
-        '--text':'#ececf3','--text-dim':'#b8b8c4','--muted':'#80808f',
-        '--accent':'#7dd3fc','--accent-2':'#c4b5fd','--gold':'#fcd34d',
-        '--teal':'#22d3ee','--emerald':'#34d399','--amber':'#fbbf24',
-        '--coral':'#fb7185','--crimson':'#ef4444',
-      }
-    },
-    contrast: {
-      label: 'High Contrast',
-      desc:  'Accessibility — black/white/yellow, max legibility',
-      vars: {
-        '--bg-0':'#000000','--bg-1':'#0a0a0a','--bg-2':'#141414',
-        '--surface':'rgba(24,24,24,.92)','--surface-2':'rgba(32,32,32,.92)','--surface-3':'rgba(8,8,8,.98)',
-        '--border':'rgba(255,255,255,.25)','--border-strong':'rgba(255,255,0,.55)',
-        '--text':'#ffffff','--text-dim':'#e5e5e5','--muted':'#a0a0a0',
-        '--accent':'#ffd600','--accent-2':'#00ffff','--gold':'#ffd600',
-        '--teal':'#00ffff','--emerald':'#00ff80','--amber':'#ffd600',
-        '--coral':'#ff6b6b','--crimson':'#ff1744',
-      }
-    },
     ocean: {
       label: 'Ocean',
       desc:  'Deep teal / navy with cyan highlights',
@@ -57,7 +31,7 @@
     },
     warm: {
       label: 'Parchment',
-      desc:  'Warm amber / sepia for long reading sessions',
+      desc:  'Warm amber / sepia — sits between dark and light',
       vars: {
         '--bg-0':'#1a130a','--bg-1':'#241a0f','--bg-2':'#2e2313',
         '--surface':'rgba(62,44,22,.55)','--surface-2':'rgba(80,58,30,.65)','--surface-3':'rgba(38,26,14,.88)',
@@ -68,17 +42,43 @@
         '--coral':'#e8845d','--crimson':'#d64a3b',
       }
     },
-    gov: {
-      label: 'Federal',
-      desc:  'Navy / white / red — US government palette',
+    sky: {
+      label: 'Sky Blue',
+      desc:  'Bright medium blue — sunny, cheerful, professional',
       vars: {
-        '--bg-0':'#0a1628','--bg-1':'#112238','--bg-2':'#172e48',
-        '--surface':'rgba(23,46,72,.58)','--surface-2':'rgba(32,58,88,.68)','--surface-3':'rgba(12,24,40,.88)',
-        '--border':'rgba(180,200,230,.18)','--border-strong':'rgba(220,60,80,.42)',
-        '--text':'#f0f4fa','--text-dim':'#b6c7de','--muted':'#7a8ca6',
-        '--accent':'#c8102e','--accent-2':'#0a3161','--gold':'#ffd966',
-        '--teal':'#5e9acf','--emerald':'#4a9d5a','--amber':'#ffd966',
-        '--coral':'#e36b78','--crimson':'#c8102e',
+        '--bg-0':'#e8f4fd','--bg-1':'#ffffff','--bg-2':'#cce5f6',
+        '--surface':'rgba(240,248,255,.90)','--surface-2':'rgba(204,229,246,.88)','--surface-3':'rgba(232,244,253,.97)',
+        '--border':'rgba(168,212,240,.55)','--border-strong':'rgba(33,150,243,.30)',
+        '--text':'#1a3654','--text-dim':'#5a7d9a','--muted':'#8a9db8',
+        '--accent':'#2196f3','--accent-2':'#0d47a1','--gold':'#f9a825',
+        '--teal':'#0097a7','--emerald':'#2e7d32','--amber':'#f57f17',
+        '--coral':'#ef5350','--crimson':'#c62828',
+      }
+    },
+    sage: {
+      label: 'Sage Garden',
+      desc:  'Soft sage green — calm, natural, easy on the eyes',
+      vars: {
+        '--bg-0':'#eef3ec','--bg-1':'#fafcf9','--bg-2':'#dce5d8',
+        '--surface':'rgba(245,248,243,.90)','--surface-2':'rgba(220,229,216,.88)','--surface-3':'rgba(238,243,236,.97)',
+        '--border':'rgba(196,212,188,.60)','--border-strong':'rgba(74,124,89,.32)',
+        '--text':'#2c3e28','--text-dim':'#5f7a58','--muted':'#8fa885',
+        '--accent':'#4a7c59','--accent-2':'#6a994e','--gold':'#ca8a04',
+        '--teal':'#0d9488','--emerald':'#16a34a','--amber':'#ca8a04',
+        '--coral':'#dc2626','--crimson':'#b91c1c',
+      }
+    },
+    blush: {
+      label: 'Blush',
+      desc:  'Soft warm rose — elegant, modern, distinctive',
+      vars: {
+        '--bg-0':'#fdf2f4','--bg-1':'#ffffff','--bg-2':'#f5dce0',
+        '--surface':'rgba(254,247,248,.90)','--surface-2':'rgba(245,220,224,.88)','--surface-3':'rgba(253,242,244,.97)',
+        '--border':'rgba(232,196,204,.55)','--border-strong':'rgba(199,91,122,.32)',
+        '--text':'#3d2028','--text-dim':'#8a6570','--muted':'#b89aa3',
+        '--accent':'#c75b7a','--accent-2':'#9c27b0','--gold':'#e97316',
+        '--teal':'#0891b2','--emerald':'#059669','--amber':'#d97706',
+        '--coral':'#ef4444','--crimson':'#dc2626',
       }
     },
     light: {
