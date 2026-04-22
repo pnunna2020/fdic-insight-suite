@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Concentration & Funding X-Ray · FDIC Insight Suite</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg-0:#05070f; --bg-1:#0a0e1f;
+    --surface:rgba(20,28,52,.62);
+    --surface-2:rgba(28,38,68,.72);
+    --surface-3:rgba(11,16,34,.85);
+    --border:rgba(120,148,210,.16);
+    --border-strong:rgba(140,170,230,.32);
+    --text:#e8edf7; --text-dim:#a4b0cf; --muted:#6f7d9e;
+    --accent:#5cc8ff; --accent-2:#9d7cff; --gold:#f0c674;
+    --emerald:#34d399; --amber:#fbbf24; --coral:#fb7185; --crimson:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg-0);color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    font-size:13.5px;line-height:1.5;overflow:hidden;-webkit-font-smoothing:antialiased;
+  }
+  .bg-mesh{
+    position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(ellipse 60% 50% at 0% 100%,rgba(240,198,116,.07),transparent 60%),
+      radial-gradient(ellipse 60% 40% at 100% 0%,rgba(157,124,255,.10),transparent 60%),
+      var(--bg-0);
+  }
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 28px;border-bottom:1px solid var(--border);height:62px;
+    background:linear-gradient(180deg,rgba(8,12,28,.85),rgba(8,12,28,.55));
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{
+    width:28px;height:28px;border-radius:7px;
+    background:conic-gradient(from 220deg,var(--accent),var(--accent-2),var(--gold),var(--accent));
+    box-shadow:0 0 16px rgba(92,200,255,.35),inset 0 0 0 1px rgba(255,255,255,.1);
+    position:relative;
+  }
+  .brand-mark::after{
+    content:'';position:absolute;inset:4px;border-radius:4px;
+    background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.25),transparent 60%),var(--bg-0);
+  }
+  .brand-text{display:flex;flex-direction:column;line-height:1.1}
+  .brand-text .nm{font-weight:700;font-size:13px;letter-spacing:-.01em}
+  .brand-text .sub{font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+  .topbar a.back{
+    color:var(--text-dim);text-decoration:none;font-size:12.5px;
+    padding:6px 12px;border-radius:6px;border:1px solid var(--border);
+    transition:.2s;font-family:'JetBrains Mono',monospace;
+  }
+  .topbar a.back:hover{color:var(--accent);border-color:var(--border-strong)}
+  .topbar-right{display:flex;align-items:center;gap:18px;font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .topbar-right .badge-app{
+    padding:3px 10px;border-radius:5px;background:rgba(240,198,116,.1);
+    color:var(--gold);border:1px solid rgba(240,198,116,.3);font-weight:600;
+  }
+
+  .container{display:grid;grid-template-columns:280px 1fr 460px;height:calc(100vh - 62px)}
+  aside{border-right:1px solid var(--border);background:var(--surface-3);overflow-y:auto;padding:20px 18px}
+  aside h2{font-size:10.5px;text-transform:uppercase;color:var(--muted);letter-spacing:.14em;margin:0 0 8px;font-weight:600}
+  aside .group{margin-bottom:18px}
+  aside select,aside input[type=text]{
+    width:100%;background:rgba(5,7,15,.65);border:1px solid var(--border);
+    color:var(--text);padding:8px 10px;border-radius:7px;font-size:12.5px;outline:0;
+    font-family:inherit;transition:.2s;
+  }
+  aside select:focus,aside input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(92,200,255,.12)}
+  .slider-row{display:flex;align-items:center;gap:10px}
+  .slider-row input[type=range]{flex:1;accent-color:var(--accent)}
+  .slider-row .v{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--accent);min-width:48px;text-align:right;font-variant-numeric:tabular-nums}
+
+  .help{font-size:11px;color:var(--muted);line-height:1.55;padding:12px;background:rgba(15,21,43,.55);border-radius:8px;border:1px solid var(--border);margin-top:6px}
+  .help b{color:var(--text-dim);font-weight:500}
+
+  .legend-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .legend-list .row{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-dim)}
+  .legend-list .swatch{width:10px;height:10px;border-radius:3px}
+
+  main{overflow-y:auto;padding:20px 24px}
+  .stat-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  .stat{
+    background:var(--surface);border:1px solid var(--border);
+    padding:14px 16px;border-radius:12px;position:relative;overflow:hidden;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  }
+  .stat::before{content:'';position:absolute;inset:0;border-radius:12px;
+    background:linear-gradient(135deg,rgba(240,198,116,.05),transparent 60%);pointer-events:none}
+  .stat .l{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;font-weight:600}
+  .stat .v{
+    font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:600;margin-top:6px;letter-spacing:-.02em;
+    background:linear-gradient(180deg,#fff,#a8b8d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .stat .v.bad{background:linear-gradient(180deg,#fda4af,#ef4444);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .v.warn{background:linear-gradient(180deg,#fde68a,#f59e0b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .delta{font-size:11px;color:var(--muted);margin-top:4px;font-family:'JetBrains Mono',monospace}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:14px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .panel.flush{padding:0}
+  .panel h3{margin:0 0 12px;font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--text-dim);font-weight:600}
+  .panel-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .panel-head h3{margin:0}
+  .search-input{
+    background:rgba(5,7,15,.65);border:1px solid var(--border);color:var(--text);
+    padding:6px 12px;border-radius:6px;font-size:12px;width:240px;outline:0;
+    font-family:inherit;transition:.2s;
+  }
+  .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(92,200,255,.12)}
+
+  /* Heatmap-style table */
+  .tbl-scroll{overflow:auto;max-height:calc(100vh - 290px)}
+  table{width:100%;border-collapse:collapse}
+  thead{position:sticky;top:0;z-index:1}
+  th{
+    font-size:10px;text-transform:uppercase;color:var(--muted);
+    letter-spacing:.1em;text-align:left;padding:11px 10px;font-weight:600;
+    background:rgba(11,16,34,.95);border-bottom:1px solid var(--border);
+    cursor:pointer;user-select:none;
+  }
+  th:hover{color:var(--accent)}
+  th.num{text-align:right}
+  td{padding:8px 10px;border-bottom:1px solid rgba(120,148,210,.06);font-size:12.5px;color:var(--text)}
+  td.num{text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+  td.cert{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11px}
+  td.bank{font-weight:500}
+  tr{cursor:pointer;transition:background .15s}
+  tr:hover td{background:rgba(92,200,255,.04)}
+  tr.selected td{background:rgba(240,198,116,.08);box-shadow:inset 3px 0 0 var(--gold)}
+
+  /* Heatmap cells */
+  .hc{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:48px;padding:3px 8px;border-radius:6px;
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;
+    font-variant-numeric:tabular-nums;
+  }
+  .hc-0{background:rgba(120,148,210,.08);color:var(--text-dim)}
+  .hc-1{background:rgba(52,211,153,.14);color:#86efac}
+  .hc-2{background:rgba(163,230,53,.14);color:#bef264}
+  .hc-3{background:rgba(251,191,36,.16);color:#fde68a}
+  .hc-4{background:rgba(251,146,60,.18);color:#fed7aa}
+  .hc-5{background:rgba(239,68,68,.22);color:#fca5a5;box-shadow:0 0 8px rgba(239,68,68,.15)}
+
+  #detail{border-left:1px solid var(--border);background:var(--surface-3);overflow-y:auto;padding:20px 22px}
+  .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:var(--muted);font-size:13px;padding:0 30px;line-height:1.6}
+  .placeholder .icon{font-size:34px;margin-bottom:14px;opacity:.4}
+  #detail h3.bn{margin:0 0 4px;font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+  #detail .sub{color:var(--muted);font-size:11.5px;margin-bottom:16px;font-family:'JetBrains Mono',monospace}
+
+  .axis-row{display:grid;grid-template-columns:140px 1fr 60px;align-items:center;gap:10px;padding:8px 0;font-size:12px;border-bottom:1px solid rgba(120,148,210,.07)}
+  .axis-row:last-of-type{border-bottom:0}
+  .axis-row .l{color:var(--text-dim)}
+  .axis-row .bar{height:8px;background:rgba(120,148,210,.10);border-radius:4px;position:relative;overflow:hidden}
+  .axis-row .fill{position:absolute;inset:0;border-radius:4px;transform-origin:left;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+  .axis-row .v{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;text-align:right;font-weight:600;font-size:12px}
+  .threshold-mark{position:absolute;top:-2px;bottom:-2px;width:1.5px;background:rgba(239,68,68,.7)}
+
+  .section-lbl{margin-top:18px;font-size:10.5px;text-transform:uppercase;color:var(--text-dim);letter-spacing:.14em;font-weight:600;margin-bottom:8px}
+
+  .reasons{background:rgba(11,16,34,.6);border-radius:9px;padding:12px 14px;font-size:12px;border:1px solid var(--border)}
+  .reasons ul{margin:0;padding-left:18px}
+  .reasons li{margin-bottom:5px;color:#fde68a;line-height:1.5}
+  .reasons li:last-child{margin-bottom:0}
+  .reasons li.ok{color:var(--text-dim)}
+
+  #detail canvas{margin:6px 0 12px;max-height:240px}
+
+  .err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);color:#fca5a5;padding:14px 18px;border-radius:10px;margin-bottom:14px;font-size:13px}
+  .err code{background:rgba(5,7,15,.5);border:1px solid var(--border);padding:2px 7px;border-radius:4px;font-size:12px;font-family:'JetBrains Mono',monospace}
+
+  aside::-webkit-scrollbar,main::-webkit-scrollbar,#detail::-webkit-scrollbar,.tbl-scroll::-webkit-scrollbar{width:8px;height:8px}
+  aside::-webkit-scrollbar-thumb,main::-webkit-scrollbar-thumb,#detail::-webkit-scrollbar-thumb,.tbl-scroll::-webkit-scrollbar-thumb{background:rgba(140,170,230,.18);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div class="brand-text">
+      <div class="nm">FDIC Insight Suite</div>
+      <div class="sub">Concentration &amp; Funding X-Ray · App #3</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge-app">LAYER 2</span>
+    <span id="meta">Loading…</span>
+    <a class="back" href="index.html">← Suite</a>
+  </div>
+</div>
+
+<div class="container">
+  <aside>
+    <div class="group">
+      <h2>As-of quarter</h2>
+      <select id="qtr"></select>
+    </div>
+    <div class="group">
+      <h2>State filter</h2>
+      <select id="state"><option value="">All states</option></select>
+    </div>
+    <div class="group">
+      <h2>Bank class</h2>
+      <select id="bclass">
+        <option value="">All</option>
+        <option value="N">N — National</option>
+        <option value="NM">NM — State, non-Fed</option>
+        <option value="SM">SM — State, Fed</option>
+        <option value="SA">SA — Savings</option>
+      </select>
+    </div>
+    <div class="group">
+      <h2>Min asset size ($M)</h2>
+      <div class="slider-row">
+        <input id="minAsset" type="range" min="0" max="10000" value="0" step="50">
+        <div class="v" id="minAssetV">0</div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Heatmap legend</h2>
+      <div class="legend-list">
+        <div class="row"><span class="swatch" style="background:rgba(52,211,153,.5)"></span>Tier 1 — &lt; 25th pct</div>
+        <div class="row"><span class="swatch" style="background:rgba(163,230,53,.5)"></span>Tier 2 — 25–50th</div>
+        <div class="row"><span class="swatch" style="background:rgba(251,191,36,.5)"></span>Tier 3 — 50–75th</div>
+        <div class="row"><span class="swatch" style="background:rgba(251,146,60,.5)"></span>Tier 4 — 75–90th</div>
+        <div class="row"><span class="swatch" style="background:rgba(239,68,68,.5)"></span>Tier 5 — &gt; 90th</div>
+      </div>
+    </div>
+
+    <div class="help">
+      Each cell shows where the bank sits in the cross-sectional distribution of that exposure for the selected quarter. Red = top decile of risk on that axis.<br><br>
+      <b>Axes:</b> Uninsured, Large depositor, HTM securities, Noncore funding, FHLB reliance, Wholesale (brokered), Asset quality stress.
+    </div>
+  </aside>
+
+  <main>
+    <div id="errBox"></div>
+    <div class="stat-bar">
+      <div class="stat"><div class="l">Banks profiled</div><div class="v" id="kBanks">—</div><div class="delta" id="kDelta">&nbsp;</div></div>
+      <div class="stat"><div class="l">Median uninsured</div><div class="v" id="kUni">—</div><div class="delta">% of deposits</div></div>
+      <div class="stat"><div class="l">Median HTM exposure</div><div class="v warn" id="kHTM">—</div><div class="delta">% of assets</div></div>
+      <div class="stat"><div class="l">Banks with 3+ red flags</div><div class="v bad" id="kRed">—</div><div class="delta">tier-5 on ≥ 3 axes</div></div>
+    </div>
+
+    <div class="panel flush">
+      <div class="panel-head">
+        <h3>Risk-axis heatmap · ranked by red-flag count</h3>
+        <input id="searchBank" type="text" class="search-input" placeholder="Search by name or CERT…" />
+      </div>
+      <div class="tbl-scroll">
+      <table id="rank">
+        <thead><tr>
+          <th data-sort="redCount">Red flags</th>
+          <th data-sort="name">Bank</th>
+          <th>State</th>
+          <th class="num" data-sort="asset">Assets ($M)</th>
+          <th class="num" data-sort="uni">Uninsured</th>
+          <th class="num" data-sort="largeDep">Large dep.</th>
+          <th class="num" data-sort="htm">HTM/asset</th>
+          <th class="num" data-sort="ncore">Noncore</th>
+          <th class="num" data-sort="fhlb">FHLB</th>
+          <th class="num" data-sort="brok">Brokered</th>
+          <th class="num" data-sort="nperf">Asset stress</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+      </div>
+    </div>
+  </main>
+
+  <div id="detail">
+    <div class="placeholder">
+      <div class="icon">◫</div>
+      Click any bank to see its 7-axis risk fingerprint, supervisory thresholds, and a plain-English read of the concentration profile.
+    </div>
+  </div>
+</div>
+
+<script>
+let PANEL=null, sortKey='redCount', sortDir='desc';
+let CHART_DEFAULTS_SET=false;
+const QTR_INDEX_DEFAULT = 7;
+
+const AXES = [
+  {key:'uni',     label:'Uninsured deposits',     fmt:v=>v.toFixed(1)+'%', threshold:50,  unit:'% of deposits',   higherIsRisk:true},
+  {key:'largeDep',label:'Large-account deposits', fmt:v=>v.toFixed(1)+'%', threshold:60,  unit:'% of deposits',   higherIsRisk:true},
+  {key:'htm',     label:'HTM securities',         fmt:v=>v.toFixed(1)+'%', threshold:25,  unit:'% of assets',     higherIsRisk:true},
+  {key:'ncore',   label:'Noncore funding',        fmt:v=>v.toFixed(1)+'%', threshold:30,  unit:'% of assets',     higherIsRisk:true},
+  {key:'fhlb',    label:'FHLB borrowings',        fmt:v=>v.toFixed(1)+'%', threshold:5,   unit:'% of assets',     higherIsRisk:true},
+  {key:'brok',    label:'Brokered / wholesale',   fmt:v=>v.toFixed(1)+'%', threshold:10,  unit:'% of assets',     higherIsRisk:true},
+  {key:'nperf',   label:'Noncurrent + OREO',      fmt:v=>v.toFixed(2)+'%', threshold:1.5, unit:'% of assets',     higherIsRisk:true},
+];
+
+function setChartDefaults(){
+  if(CHART_DEFAULTS_SET) return;
+  Chart.defaults.color = '#a4b0cf';
+  Chart.defaults.font.family = "'Inter',sans-serif";
+  Chart.defaults.font.size = 10.5;
+  CHART_DEFAULTS_SET = true;
+}
+
+async function loadData(){
+  setChartDefaults();
+  const p = await fetch('./data/liquidity_panel.json').then(r=>r.json());
+  PANEL = p;
+  const states = new Set();
+  for(const c in p.banks){ const s=p.banks[c]._meta.state; if(s) states.add(s); }
+  const sel=document.getElementById('state');
+  for(const s of [...states].sort()){ sel.innerHTML += `<option value="${s}">${s}</option>`; }
+  const q=document.getElementById('qtr');
+  p.quarters.forEach((qq,i)=>q.innerHTML += `<option value="${i}" ${i===QTR_INDEX_DEFAULT?'selected':''}>${qq}</option>`);
+  document.getElementById('meta').textContent =
+    `${Object.keys(p.banks).length.toLocaleString()} banks · ${p.quarters.length} quarters · 7 risk axes`;
+  recompute();
+}
+
+function profileBanks(qIdx){
+  const recs=[];
+  for(const cert in PANEL.banks){
+    const b = PANEL.banks[cert];
+    const m = b._meta || {};
+    if(m.active!=='1') continue;
+    const dep = b.DEP[qIdx], ins = b.DEPINS[qIdx], asset = b.ASSET[qIdx];
+    if(!dep || !asset) continue;
+    const uni      = ins ? ((1-ins/dep)*100) : null;
+    const largeDep = b.DEPLGAMT && b.DEPLGAMT[qIdx]!=null ? (b.DEPLGAMT[qIdx]/dep)*100 : null;
+    const htm      = b.SCHTMRES && b.SCHTMRES[qIdx]!=null ? (b.SCHTMRES[qIdx]/asset)*100 : null;
+    const ncore    = b.NCOREQ1[qIdx];
+    const fhlb     = b.OTHBFHLB && b.OTHBFHLB[qIdx]!=null ? (b.OTHBFHLB[qIdx]/asset)*100 : null;
+    const brok     = b.ISECBROK && b.ISECBROK[qIdx]!=null ? (b.ISECBROK[qIdx]/asset)*100 : null;
+    const nperf    = b.NPERFV[qIdx];
+    recs.push({cert, name:m.name, state:m.state, city:m.city, bclass:m.class,
+      asset, dep, ins, uni, largeDep, htm, ncore, fhlb, brok, nperf});
+  }
+  // Percentile-rank each axis. Higher = more risk. Compute tier 1-5.
+  for(const ax of AXES){
+    const vs = recs.map(r=>r[ax.key]).map((v,i)=>({v,i})).filter(x=>x.v!==null && x.v!==undefined && !isNaN(x.v));
+    vs.sort((a,b)=>(ax.higherIsRisk?(a.v-b.v):(b.v-a.v)));
+    const N=vs.length;
+    vs.forEach((x,k)=>{
+      const pct=(k/(N-1))*100;
+      recs[x.i]['_p_'+ax.key]=pct;
+      recs[x.i]['_t_'+ax.key]= pct>=90?5: pct>=75?4: pct>=50?3: pct>=25?2:1;
+    });
+  }
+  // Red-flag count: tier-5 on each axis.
+  for(const r of recs){
+    let n=0;
+    for(const ax of AXES){ if(r['_t_'+ax.key]===5) n++; }
+    r.redCount = n;
+  }
+  return recs;
+}
+
+function applyFilters(recs){
+  const st = document.getElementById('state').value;
+  const cls = document.getElementById('bclass').value;
+  const minA = +document.getElementById('minAsset').value * 1000;
+  const q = document.getElementById('searchBank').value.trim().toLowerCase();
+  return recs.filter(r=>{
+    if(st && r.state!==st) return false;
+    if(cls && r.bclass!==cls) return false;
+    if(minA && (!r.asset || r.asset<minA)) return false;
+    if(q && !((r.name||'').toLowerCase().includes(q) || r.cert.toString().includes(q))) return false;
+    return true;
+  });
+}
+
+function animateNum(el, target, opts={}){
+  const start=performance.now(), dur=opts.dur||500;
+  const from=parseFloat(el.dataset.cur||'0');
+  el.dataset.cur=target;
+  function tick(t){
+    const k=Math.min(1,(t-start)/dur);
+    const e=1-Math.pow(1-k,3);
+    const v=from+(target-from)*e;
+    el.textContent = opts.fmt ? opts.fmt(v) : Math.round(v).toLocaleString();
+    if(k<1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function renderHeader(recs){
+  const N = recs.length;
+  const us = recs.map(r=>r.uni).filter(x=>x!==null).sort((a,b)=>a-b);
+  const med = us[Math.floor(us.length/2)] || 0;
+  const htms = recs.map(r=>r.htm).filter(x=>x!==null).sort((a,b)=>a-b);
+  const medH = htms[Math.floor(htms.length/2)] || 0;
+  const red3 = recs.filter(r=>r.redCount>=3).length;
+  animateNum(document.getElementById('kBanks'), N);
+  document.getElementById('kUni').textContent = (med?med.toFixed(1):'—')+'%';
+  document.getElementById('kHTM').textContent = (medH?medH.toFixed(1):'—')+'%';
+  animateNum(document.getElementById('kRed'), red3);
+  document.getElementById('kDelta').textContent = `of ${Object.keys(PANEL.banks).length.toLocaleString()} active`;
+}
+
+function renderTable(recs){
+  const dir = sortDir==='desc'?-1:1;
+  recs.sort((a,b)=>{
+    const av=a[sortKey]; const bv=b[sortKey];
+    if(typeof av==='string') return dir*((av||'').localeCompare(bv||''));
+    return dir*((av||0)-(bv||0));
+  });
+  const cap = recs.slice(0,500);
+  const tb = document.querySelector('#rank tbody');
+  tb.innerHTML = cap.map(r=>{
+    const cell=(key,fmt)=>{
+      const v=r[key]; if(v===null||v===undefined||isNaN(v)) return `<td class="num"><span class="hc hc-0">—</span></td>`;
+      const t=r['_t_'+key]||0;
+      return `<td class="num"><span class="hc hc-${t}">${fmt(v)}</span></td>`;
+    };
+    return `
+    <tr data-cert="${r.cert}">
+      <td><span class="hc hc-${Math.min(5,r.redCount)}">${r.redCount}</span></td>
+      <td class="bank">${escapeHtml(r.name||'')}</td>
+      <td>${r.state||''}</td>
+      <td class="num">${num(r.asset/1000)}</td>
+      ${cell('uni',v=>v.toFixed(1))}
+      ${cell('largeDep',v=>v.toFixed(1))}
+      ${cell('htm',v=>v.toFixed(1))}
+      ${cell('ncore',v=>v.toFixed(1))}
+      ${cell('fhlb',v=>v.toFixed(1))}
+      ${cell('brok',v=>v.toFixed(1))}
+      ${cell('nperf',v=>v.toFixed(2))}
+    </tr>`;
+  }).join('');
+  tb.querySelectorAll('tr').forEach(tr=>tr.addEventListener('click',()=>{
+    document.querySelectorAll('#rank tr').forEach(r=>r.classList.remove('selected'));
+    tr.classList.add('selected');
+    showDetail(tr.dataset.cert);
+  }));
+}
+
+function showDetail(cert){
+  const b = PANEL.banks[cert]; if(!b) return;
+  const m = b._meta;
+  const qIdx = +document.getElementById('qtr').value;
+  const rec = profileBanks(qIdx).find(r=>r.cert===cert);
+  if(!rec) return;
+
+  const reasons = [];
+  for(const ax of AXES){
+    const v = rec[ax.key]; if(v===null||v===undefined||isNaN(v)) continue;
+    const t = rec['_t_'+ax.key];
+    if(t===5) reasons.push({txt:`<b>${ax.label}</b> ${ax.fmt(v)} — top decile vs peers (threshold ${ax.threshold}${ax.unit.includes('%')?'%':''}).`,kind:'bad'});
+    else if(t===4) reasons.push({txt:`<b>${ax.label}</b> ${ax.fmt(v)} — elevated (75–90th percentile).`,kind:'warn'});
+  }
+  if(reasons.length===0) reasons.push({txt:`No axis above 75th percentile — concentration profile within the typical range.`,kind:'ok'});
+
+  // Build axis bars
+  const barsHtml = AXES.map(ax=>{
+    const v = rec[ax.key];
+    if(v===null||v===undefined||isNaN(v)) return `
+      <div class="axis-row"><div class="l">${ax.label}</div><div class="bar"></div><div class="v">—</div></div>`;
+    const pct = rec['_p_'+ax.key];
+    const tierColor = ['#34d399','#a3e635','#fbbf24','#fb923c','#ef4444'][rec['_t_'+ax.key]-1];
+    // Threshold marker as a fraction of axis 0..max(50% of dist or 2*threshold)
+    const axisMax = Math.max(ax.threshold*2, ax.threshold + Math.abs(v)*1.2, ax.threshold*1.2);
+    const fillPct = Math.min(100, (v/axisMax)*100);
+    const thrPct = (ax.threshold/axisMax)*100;
+    return `
+      <div class="axis-row">
+        <div class="l">${ax.label}</div>
+        <div class="bar">
+          <div class="fill" style="background:${tierColor};transform:scaleX(${fillPct/100});"></div>
+          <div class="threshold-mark" style="left:${thrPct}%"></div>
+        </div>
+        <div class="v" style="color:${tierColor}">${ax.fmt(v)}</div>
+      </div>`;
+  }).join('');
+
+  const radarData = AXES.map(ax => {
+    const p = rec['_p_'+ax.key]; return p===undefined?null:p;
+  });
+  const radarLabels = AXES.map(ax=>ax.label.split(' ')[0]); // short
+
+  document.getElementById('detail').innerHTML = `
+    <h3 class="bn">${escapeHtml(m.name||'')}</h3>
+    <div class="sub">CERT ${cert} · ${m.city||''}, ${m.state||''} · Class ${m.class||''} · ${PANEL.quarters[qIdx]}</div>
+
+    <div class="section-lbl">Risk fingerprint · percentile rank</div>
+    <canvas id="radar" height="240"></canvas>
+
+    <div class="section-lbl">Axes · value vs supervisory threshold</div>
+    ${barsHtml}
+
+    <div class="section-lbl">Plain-English read</div>
+    <div class="reasons"><ul>${reasons.map(r=>`<li class="${r.kind==='ok'?'ok':''}">${r.txt}</li>`).join('')}</ul></div>
+  `;
+
+  new Chart(document.getElementById('radar'),{
+    type:'radar',
+    data:{
+      labels:radarLabels,
+      datasets:[{
+        label:'Percentile rank',
+        data:radarData,
+        backgroundColor:'rgba(240,198,116,.18)',
+        borderColor:'#f0c674',
+        borderWidth:2,
+        pointBackgroundColor:'#f0c674',
+        pointRadius:3,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#0a0e1f',borderColor:'rgba(120,148,210,.32)',borderWidth:1,padding:10,cornerRadius:6,
+          callbacks:{label:i=>`${i.parsed.r.toFixed(0)}th percentile`}}},
+      scales:{r:{
+        min:0,max:100,beginAtZero:true,
+        angleLines:{color:'rgba(120,148,210,.10)'},
+        grid:{color:'rgba(120,148,210,.10)'},
+        pointLabels:{color:'#a4b0cf',font:{size:10.5,weight:'500'}},
+        ticks:{color:'#6f7d9e',backdropColor:'transparent',stepSize:25,font:{size:9}},
+      }}
+    }
+  });
+}
+
+function recompute(){
+  const qIdx = +document.getElementById('qtr').value;
+  const recs = profileBanks(qIdx);
+  const filtered = applyFilters(recs);
+  renderHeader(filtered);
+  renderTable(filtered);
+}
+
+function num(v){ if(v===null||v===undefined||isNaN(v))return '—';
+  return Number(v).toLocaleString(undefined,{maximumFractionDigits:0}); }
+function escapeHtml(s){ if(s===null||s===undefined)return '';
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+['qtr','state','bclass'].forEach(id=>document.getElementById(id).addEventListener('change',recompute));
+document.getElementById('minAsset').addEventListener('input',e=>{
+  document.getElementById('minAssetV').textContent=(+e.target.value).toLocaleString();
+  recompute();
+});
+document.getElementById('searchBank').addEventListener('input',recompute);
+document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>{
+  const k=th.dataset.sort;
+  if(sortKey===k) sortDir=(sortDir==='desc'?'asc':'desc'); else { sortKey=k; sortDir='desc'; }
+  recompute();
+}));
+
+loadData().catch(e=>{
+  document.getElementById('errBox').innerHTML =
+    `<div class="err"><b>Could not load data.</b><br>
+    Run <code>python3 -m http.server 8765</code> from the prototypes folder, then visit
+    <code>http://localhost:8765/concentration_xray.html</code>.<br>Error: ${e.message}</div>`;
+});
+</script>
+</body>
+</html>

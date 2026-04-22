@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Semantic Layer · FDIC Insight Suite</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#05070f;
+    --bg-1:#0a0e1f;
+    --bg-2:#0f152b;
+    --surface:rgba(20,28,52,.62);
+    --surface-2:rgba(28,38,68,.72);
+    --surface-3:rgba(11,16,34,.85);
+    --border:rgba(120,148,210,.16);
+    --border-strong:rgba(140,170,230,.32);
+    --text:#e8edf7;
+    --text-dim:#a4b0cf;
+    --muted:#6f7d9e;
+    --accent:#5cc8ff;
+    --accent-2:#9d7cff;
+    --gold:#f0c674;
+    --emerald:#34d399;
+    --amber:#fbbf24;
+    --coral:#fb7185;
+    --crimson:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg-0);color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    font-size:14px;line-height:1.5;overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .bg-mesh{
+    position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(ellipse 70% 50% at 5% 0%,rgba(92,200,255,.10),transparent 60%),
+      radial-gradient(ellipse 60% 40% at 100% 100%,rgba(157,124,255,.09),transparent 60%),
+      var(--bg-0);
+  }
+
+  /* ------ Top bar ------ */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 28px;border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,rgba(8,12,28,.85),rgba(8,12,28,.55));
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    height:62px;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{
+    width:28px;height:28px;border-radius:7px;
+    background:conic-gradient(from 220deg,var(--accent),var(--accent-2),var(--gold),var(--accent));
+    box-shadow:0 0 16px rgba(92,200,255,.35),inset 0 0 0 1px rgba(255,255,255,.1);
+    position:relative;
+  }
+  .brand-mark::after{
+    content:'';position:absolute;inset:4px;border-radius:4px;
+    background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.25),transparent 60%),var(--bg-0);
+  }
+  .brand-text{display:flex;flex-direction:column;line-height:1.1}
+  .brand-text .nm{font-weight:700;font-size:13px;letter-spacing:-.01em}
+  .brand-text .sub{font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+  .topbar a.back{
+    color:var(--text-dim);text-decoration:none;font-size:12.5px;
+    padding:6px 12px;border-radius:6px;border:1px solid var(--border);
+    transition:.2s;font-family:'JetBrains Mono',monospace;
+  }
+  .topbar a.back:hover{color:var(--accent);border-color:var(--border-strong)}
+  .topbar-right{display:flex;align-items:center;gap:18px;font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .topbar-right .badge-app{
+    padding:3px 10px;border-radius:5px;background:rgba(92,200,255,.1);
+    color:var(--accent);border:1px solid rgba(92,200,255,.25);font-weight:600;
+  }
+
+  /* ------ Layout ------ */
+  .container{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 62px)}
+  aside{
+    border-right:1px solid var(--border);background:var(--surface-3);
+    overflow-y:auto;padding:22px 20px;
+  }
+  aside::-webkit-scrollbar,main::-webkit-scrollbar,.tbl-scroll::-webkit-scrollbar{width:8px;height:8px}
+  aside::-webkit-scrollbar-thumb,main::-webkit-scrollbar-thumb,.tbl-scroll::-webkit-scrollbar-thumb{background:rgba(140,170,230,.18);border-radius:4px}
+  aside::-webkit-scrollbar-thumb:hover,main::-webkit-scrollbar-thumb:hover{background:rgba(140,170,230,.32)}
+
+  aside .group{margin-bottom:24px}
+  aside h2{
+    font-size:10.5px;text-transform:uppercase;color:var(--muted);
+    letter-spacing:.14em;margin:0 0 10px;font-weight:600;
+  }
+  aside input[type=text],aside select{
+    width:100%;background:rgba(5,7,15,.65);border:1px solid var(--border);
+    color:var(--text);padding:9px 12px;border-radius:8px;font-size:13px;outline:0;
+    font-family:inherit;transition:border-color .2s,background .2s;
+  }
+  aside input[type=text]:focus,aside select:focus{
+    border-color:var(--accent);background:rgba(5,7,15,.85);
+    box-shadow:0 0 0 3px rgba(92,200,255,.12);
+  }
+  aside .checks label{
+    display:flex;align-items:center;gap:8px;font-size:12.5px;padding:5px 0;
+    cursor:pointer;color:var(--text-dim);transition:color .2s;
+  }
+  aside .checks label:hover{color:var(--text)}
+  aside .checks input{accent-color:var(--accent)}
+  aside .checks .cnt{margin-left:auto;color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace}
+  aside .help{
+    font-size:11.5px;color:var(--muted);line-height:1.55;
+    padding:14px;background:rgba(15,21,43,.55);border-radius:8px;
+    border:1px solid var(--border);
+  }
+
+  /* ------ Main ------ */
+  main{padding:24px 32px;overflow-y:auto}
+
+  /* Query box */
+  .query-card{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:14px;padding:20px 22px;margin-bottom:22px;
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    position:relative;overflow:hidden;
+  }
+  .query-card::before{
+    content:'';position:absolute;inset:-1px;border-radius:14px;padding:1px;
+    background:linear-gradient(135deg,rgba(92,200,255,.35),rgba(157,124,255,.18) 50%,transparent 75%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
+  }
+  .query-card label{
+    font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;display:flex;align-items:center;gap:8px;
+  }
+  .query-card label::before{
+    content:'';width:5px;height:5px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 8px var(--accent);
+  }
+  .query-card textarea{
+    width:100%;background:rgba(5,7,15,.55);color:var(--text);
+    border:1px solid var(--border);border-radius:10px;
+    padding:14px 16px;font-size:15px;line-height:1.5;margin-top:10px;
+    min-height:60px;resize:vertical;outline:0;font-family:inherit;
+    transition:border-color .2s;
+  }
+  .query-card textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(92,200,255,.12)}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+  .chip{
+    font-size:12px;background:rgba(15,21,43,.65);
+    border:1px solid var(--border);
+    color:var(--text-dim);padding:6px 12px;border-radius:99px;cursor:pointer;
+    transition:.18s;font-weight:500;
+  }
+  .chip:hover{
+    background:rgba(92,200,255,.08);border-color:var(--accent);color:var(--accent);
+    transform:translateY(-1px);
+  }
+  .run-row{
+    display:flex;justify-content:space-between;align-items:center;margin-top:16px;
+  }
+  .hint{font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .hint kbd{
+    background:rgba(15,21,43,.7);border:1px solid var(--border);border-radius:4px;
+    padding:1px 6px;font-size:10.5px;color:var(--text-dim);
+  }
+  button.primary{
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    color:#0a0e1f;border:0;padding:10px 22px;border-radius:8px;
+    font-weight:700;cursor:pointer;font-size:13px;letter-spacing:.01em;
+    box-shadow:0 4px 18px rgba(92,200,255,.28);
+    transition:transform .2s,box-shadow .2s;
+  }
+  button.primary:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(92,200,255,.4)}
+
+  /* Interp box */
+  .interp{
+    background:rgba(11,16,34,.65);border:1px solid var(--border);border-radius:10px;
+    padding:14px 16px;margin-bottom:18px;font-size:13px;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  }
+  .interp .lbl{font-weight:600;color:var(--text-dim);margin-right:8px}
+  .interp .pill{
+    display:inline-block;padding:4px 11px;margin:3px 5px 3px 0;
+    border-radius:99px;font-size:12px;font-weight:500;
+    background:rgba(92,200,255,.08);border:1px solid rgba(92,200,255,.35);
+    color:var(--accent);
+  }
+  .interp .pill.warn{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.35);color:var(--amber)}
+  .interp .empty{color:var(--muted);font-style:italic}
+
+  /* Tabs */
+  .tab-row{
+    display:flex;gap:4px;margin-bottom:18px;
+    border-bottom:1px solid var(--border);
+  }
+  .tab{
+    padding:10px 18px;color:var(--muted);cursor:pointer;
+    border-bottom:2px solid transparent;font-size:13px;font-weight:500;
+    transition:.2s;margin-bottom:-1px;
+  }
+  .tab:hover{color:var(--text-dim)}
+  .tab.active{color:var(--accent);border-color:var(--accent)}
+  .tab .cnt{
+    margin-left:6px;font-family:'JetBrains Mono',monospace;font-size:11px;
+    color:var(--muted);
+  }
+  .tab.active .cnt{color:var(--accent)}
+
+  /* Stat strip */
+  .stat-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .stat{
+    background:var(--surface);border:1px solid var(--border);
+    padding:14px 16px;border-radius:12px;position:relative;overflow:hidden;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  }
+  .stat::before{
+    content:'';position:absolute;inset:0;border-radius:12px;
+    background:linear-gradient(135deg,rgba(92,200,255,.05),transparent 60%);pointer-events:none;
+  }
+  .stat .l{
+    color:var(--muted);font-size:10.5px;text-transform:uppercase;
+    letter-spacing:.12em;font-weight:600;
+  }
+  .stat .v{
+    font-family:'JetBrains Mono',monospace;
+    font-size:24px;font-weight:600;margin-top:6px;letter-spacing:-.02em;
+    background:linear-gradient(180deg,#fff,#a8b8d8);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+
+  /* Table */
+  .table-wrap{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:14px;overflow:hidden;
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  }
+  .tbl-scroll{overflow:auto;max-height:calc(100vh - 540px)}
+  table{width:100%;border-collapse:collapse}
+  thead{position:sticky;top:0;z-index:1}
+  th{
+    font-size:10.5px;text-transform:uppercase;color:var(--muted);
+    letter-spacing:.1em;text-align:left;padding:14px 14px;font-weight:600;
+    background:rgba(11,16,34,.95);border-bottom:1px solid var(--border);
+    backdrop-filter:blur(8px);
+  }
+  td{
+    padding:11px 14px;border-bottom:1px solid rgba(120,148,210,.06);
+    font-size:13px;color:var(--text);
+  }
+  tr:hover td{background:rgba(92,200,255,.04)}
+  tr:last-child td{border-bottom:0}
+  td.num{text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+  td.cert{color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:11.5px}
+  td.bank{font-weight:500}
+
+  /* Variable cards */
+  .var-grid{display:grid;grid-template-columns:1fr;gap:8px}
+  .var-row{
+    padding:14px 18px;background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;cursor:pointer;transition:.2s;
+    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  }
+  .var-row:hover{
+    border-color:var(--border-strong);background:var(--surface-2);
+    transform:translateX(2px);
+  }
+  .var-row .vname{
+    color:var(--accent);font-family:'JetBrains Mono',monospace;
+    font-size:12px;font-weight:600;letter-spacing:.02em;
+  }
+  .var-row .vlabel{color:var(--text);font-size:13.5px;font-weight:500;margin-top:4px}
+  .var-row .vdef{color:var(--text-dim);font-size:12.5px;margin-top:6px;line-height:1.5}
+  .var-row .vmeta{
+    color:var(--muted);font-size:11px;margin-top:8px;
+    display:flex;gap:12px;font-family:'JetBrains Mono',monospace;
+  }
+  .var-row .vmeta b{color:var(--text-dim);font-weight:500}
+
+  .err{
+    background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);
+    color:#fca5a5;padding:14px 18px;border-radius:10px;margin-bottom:14px;
+    font-size:13px;
+  }
+  .err code{
+    background:rgba(5,7,15,.5);border:1px solid var(--border);
+    padding:2px 7px;border-radius:4px;font-size:12px;
+    font-family:'JetBrains Mono',monospace;
+  }
+
+  .skel{
+    height:14px;border-radius:4px;
+    background:linear-gradient(90deg,rgba(120,148,210,.06),rgba(120,148,210,.18),rgba(120,148,210,.06));
+    background-size:200% 100%;animation:shimmer 1.4s linear infinite;
+  }
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div class="brand-text">
+      <div class="nm">FDIC Insight Suite</div>
+      <div class="sub">Semantic Layer · App #10</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge-app">LAYER 1</span>
+    <span id="datameta">Loading…</span>
+    <a class="back" href="index.html">← Suite</a>
+  </div>
+</div>
+
+<div class="container">
+  <aside>
+    <div class="group">
+      <h2>Search the dictionary</h2>
+      <input id="varSearch" type="text" placeholder="e.g. uninsured, CRE, tier 1…" />
+    </div>
+    <div class="group">
+      <h2>Filter by domain</h2>
+      <div class="checks" id="domainChecks"></div>
+    </div>
+    <div class="group">
+      <h2>Filter by source</h2>
+      <div class="checks" id="sourceChecks"></div>
+    </div>
+    <div class="help">
+      Click any variable to drop its identifier into the query box. The dictionary spans the full FDIC graph — RIS Call Report (CDI · RAT · FTS), Institutions, Locations, Summary of Deposits, Failures.
+    </div>
+  </aside>
+
+  <main>
+    <div class="query-card">
+      <label>Natural-language query</label>
+      <textarea id="nlq" placeholder="Ask in plain English, e.g. 'community banks in Texas with loans/deposits over 90% and noncore funding above 30%'"></textarea>
+      <div class="chips">
+        <span class="chip" data-q="community banks in Texas with assets over 1 billion">community banks in TX over $1B</span>
+        <span class="chip" data-q="banks with uninsured deposit ratio above 50% and assets over 5 billion">high uninsured deposit risk</span>
+        <span class="chip" data-q="banks with negative ROA in the last quarter">unprofitable in Q4 2025</span>
+        <span class="chip" data-q="banks in California with loans to deposits above 90%">CA — high LTD ratio</span>
+        <span class="chip" data-q="national banks with equity ratio under 8% and noncore above 25%">thin capital + wholesale-funded</span>
+        <span class="chip" data-q="all FDIC-insured banks in Wyoming">all banks in WY</span>
+      </div>
+      <div class="run-row">
+        <div class="hint"><kbd>⌘</kbd> + <kbd>Return</kbd> to run</div>
+        <button id="runBtn" class="primary">Run query →</button>
+      </div>
+    </div>
+
+    <div id="errBox"></div>
+    <div id="interpBox"></div>
+
+    <div class="tab-row">
+      <div class="tab active" data-tab="results">Matching banks</div>
+      <div class="tab" data-tab="vars">Dictionary <span class="cnt" id="varCount">0</span></div>
+    </div>
+
+    <div id="resultsTab">
+      <div class="stat-bar">
+        <div class="stat"><div class="l">Banks matched</div><div class="v" id="matchN">—</div></div>
+        <div class="stat"><div class="l">Total assets ($B)</div><div class="v" id="matchAsset">—</div></div>
+        <div class="stat"><div class="l">Total deposits ($B)</div><div class="v" id="matchDep">—</div></div>
+        <div class="stat"><div class="l">Median equity ratio</div><div class="v" id="matchEqv">—</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="tbl-scroll">
+          <table id="resultsTable">
+            <thead>
+              <tr><th>CERT</th><th>Bank</th><th>State</th><th>City</th><th>Class</th>
+                  <th class="num">Assets ($M)</th><th class="num">Deposits ($M)</th>
+                  <th class="num">Equity %</th><th class="num">ROA Q4'25</th>
+                  <th class="num">Uninsured %</th><th class="num">Loans/Dep</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="varsTab" style="display:none">
+      <div class="var-grid" id="varList"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+let VARS=[], INST=[], PANEL=null, BANK_INDEX={};
+
+async function loadData(){
+  document.getElementById('datameta').textContent='Loading variables…';
+  const [v,i,p] = await Promise.all([
+    fetch('./data/variables.json').then(r=>r.json()),
+    fetch('./data/institutions.json').then(r=>r.json()),
+    fetch('./data/liquidity_panel.json').then(r=>r.json()),
+  ]);
+  VARS=v; INST=i; PANEL=p;
+  for(const row of INST){ BANK_INDEX[row.CERT]=row; }
+  document.getElementById('datameta').textContent =
+    `${v.length.toLocaleString()} vars · ${i.length.toLocaleString()} banks · ${Object.keys(p.banks).length.toLocaleString()} reporting · 8 quarters`;
+  renderDictionary();
+  renderFacets();
+  document.getElementById('nlq').value = 'community banks in Texas with assets over 1 billion';
+  runQuery();
+}
+
+function renderFacets(){
+  const dCnt={}, sCnt={};
+  for(const v of VARS){
+    for(const d of v.domains||['Other']) dCnt[d]=(dCnt[d]||0)+1;
+    sCnt[v.source]=(sCnt[v.source]||0)+1;
+  }
+  const dWrap=document.getElementById('domainChecks');
+  dWrap.innerHTML='';
+  for(const d of Object.keys(dCnt).sort()){
+    dWrap.innerHTML += `<label><input type="checkbox" class="domF" value="${d}"> ${d}<span class="cnt">${dCnt[d]}</span></label>`;
+  }
+  const sWrap=document.getElementById('sourceChecks');
+  sWrap.innerHTML='';
+  const sourceLabels={ris:'RIS / Call Report', institutions:'Institutions', locations:'Locations', sod:'SOD (schema)', events:'Failures (schema)'};
+  for(const s of Object.keys(sCnt).sort()){
+    sWrap.innerHTML += `<label><input type="checkbox" class="srcF" value="${s}"> ${sourceLabels[s]||s}<span class="cnt">${sCnt[s]}</span></label>`;
+  }
+  document.querySelectorAll('.domF, .srcF').forEach(el=>el.addEventListener('change',renderDictionary));
+  document.getElementById('varSearch').addEventListener('input',renderDictionary);
+}
+
+function renderDictionary(){
+  const q=document.getElementById('varSearch').value.toLowerCase().trim();
+  const ds=Array.from(document.querySelectorAll('.domF:checked')).map(e=>e.value);
+  const ss=Array.from(document.querySelectorAll('.srcF:checked')).map(e=>e.value);
+  const f = VARS.filter(v=>{
+    if(q && !((v.name+' '+v.label+' '+v.definition).toLowerCase().includes(q))) return false;
+    if(ds.length && !v.domains.some(d=>ds.includes(d))) return false;
+    if(ss.length && !ss.includes(v.source)) return false;
+    return true;
+  });
+  document.getElementById('varCount').textContent=f.length.toLocaleString();
+  const tab=document.getElementById('varList');
+  tab.innerHTML = f.slice(0,400).map(v=>`
+    <div class="var-row" data-name="${v.name}">
+      <div class="vname">${v.name}</div>
+      <div class="vlabel">${escapeHtml(v.label)}</div>
+      <div class="vdef">${escapeHtml((v.definition||'').slice(0,300))}</div>
+      <div class="vmeta"><span>source <b>${v.source}</b></span><span>domains <b>${(v.domains||[]).join(', ')}</b></span></div>
+    </div>`).join('') + (f.length>400?`<div style="color:var(--muted);padding:18px;font-style:italic;text-align:center;font-size:12.5px">${f.length-400} more — refine the search.</div>`:'');
+  tab.querySelectorAll('.var-row').forEach(r=>r.addEventListener('click',()=>{
+    const ta=document.getElementById('nlq');
+    ta.value=(ta.value+' '+r.dataset.name).trim();
+    ta.focus();
+  }));
+}
+
+const STATES = {alabama:'AL',alaska:'AK',arizona:'AZ',arkansas:'AR',california:'CA',
+  colorado:'CO',connecticut:'CT',delaware:'DE',florida:'FL',georgia:'GA',hawaii:'HI',
+  idaho:'ID',illinois:'IL',indiana:'IN',iowa:'IA',kansas:'KS',kentucky:'KY',louisiana:'LA',
+  maine:'ME',maryland:'MD',massachusetts:'MA',michigan:'MI',minnesota:'MN',mississippi:'MS',
+  missouri:'MO',montana:'MT',nebraska:'NE',nevada:'NV','new hampshire':'NH','new jersey':'NJ',
+  'new mexico':'NM','new york':'NY','north carolina':'NC','north dakota':'ND',ohio:'OH',
+  oklahoma:'OK',oregon:'OR',pennsylvania:'PA','rhode island':'RI','south carolina':'SC',
+  'south dakota':'SD',tennessee:'TN',texas:'TX',utah:'UT',vermont:'VT',virginia:'VA',
+  washington:'WA','west virginia':'WV',wisconsin:'WI',wyoming:'WY','district of columbia':'DC'};
+
+function parseNL(q){
+  const ql=' '+q.toLowerCase()+' ';
+  const f={ filters:[], pills:[] };
+
+  for(const [name,abbr] of Object.entries(STATES)){
+    if(ql.includes(' '+name+' ') || ql.match(new RegExp('\\b'+abbr.toLowerCase()+'\\b'))){
+      f.filters.push({col:'STALP',op:'=',val:abbr,scope:'inst'});
+      f.pills.push({label:'State = '+abbr,kind:'ok'});
+      break;
+    }
+  }
+  if(/\bnational\b/.test(ql)){ f.filters.push({col:'BKCLASS',op:'in',val:['N','NM'],scope:'inst'});
+    f.pills.push({label:'Class = National',kind:'ok'}); }
+  if(/\bcommunity bank/.test(ql)){
+    f.filters.push({col:'ASSET',op:'<',val:10_000_000,scope:'panel',quarter:'last'});
+    f.pills.push({label:'Community (assets < $10B)',kind:'ok'});
+  }
+  if(/\bfdic[- ]?insured\b/.test(ql)){
+    f.filters.push({col:'ACTIVE',op:'=',val:'1',scope:'inst'});
+    f.pills.push({label:'FDIC-insured & active',kind:'ok'});
+  }
+  const assetRe=/assets?\s+(over|above|greater than|>=?|under|below|less than|<=?)\s+(\$?[\d.]+)\s*(billion|bn|b|million|mn|m|trillion|t)?/i;
+  let m=ql.match(assetRe);
+  if(m){
+    const op = /under|below|less|<=?/.test(m[1]) ? '<' : '>';
+    let n=parseFloat(m[2]);
+    const u=(m[3]||'').toLowerCase();
+    if(u.startsWith('t')) n*=1e9;
+    else if(u.startsWith('b')) n*=1e6;
+    else if(u.startsWith('m')) n*=1e3;
+    else n*=1e3;
+    f.filters.push({col:'ASSET',op,val:n,scope:'panel',quarter:'last'});
+    f.pills.push({label:`Assets ${op} ${m[2]} ${m[3]||'million'}`,kind:'ok'});
+  }
+  m = ql.match(/uninsured(?:\s+deposit)?(?:\s+ratio)?\s+(above|over|>=?|below|under|<=?)\s+(\d+(?:\.\d+)?)\s*%?/);
+  if(m){
+    const op = /under|below|<=?/.test(m[1]) ? '<' : '>';
+    f.filters.push({col:'__uninsured_pct',op,val:parseFloat(m[2]),scope:'derived',quarter:'last'});
+    f.pills.push({label:`Uninsured ratio ${op} ${m[2]}%`,kind:'ok'});
+  }
+  m = ql.match(/(?:equity\s+ratio|equity\/assets|tier\s*1|capital)\s+(above|over|>=?|below|under|<=?)\s+(\d+(?:\.\d+)?)\s*%?/);
+  if(m){
+    const op = /under|below|<=?/.test(m[1]) ? '<' : '>';
+    f.filters.push({col:'EQV',op,val:parseFloat(m[2]),scope:'panel',quarter:'last'});
+    f.pills.push({label:`Equity ratio ${op} ${m[2]}%`,kind:'ok'});
+  }
+  m = ql.match(/noncore(?:\s+funding)?\s+(above|over|>=?|below|under|<=?)\s+(\d+(?:\.\d+)?)\s*%?/);
+  if(m){
+    const op = /under|below|<=?/.test(m[1]) ? '<' : '>';
+    f.filters.push({col:'NCOREQ1',op,val:parseFloat(m[2]),scope:'panel',quarter:'last'});
+    f.pills.push({label:`Noncore funding ${op} ${m[2]}%`,kind:'ok'});
+  }
+  m = ql.match(/(?:loans?\s*(?:to|\/|over)\s*deposits?|ltd|loan-to-deposit)\s*(?:ratio)?\s+(above|over|>=?|below|under|<=?)\s+(\d+(?:\.\d+)?)\s*%?/);
+  if(m){
+    const op = /under|below|<=?/.test(m[1]) ? '<' : '>';
+    f.filters.push({col:'LNLSDEPR',op,val:parseFloat(m[2]),scope:'panel',quarter:'last'});
+    f.pills.push({label:`Loans/Deposits ${op} ${m[2]}%`,kind:'ok'});
+  }
+  if(/(negative\s+roa|unprofitable|losing\s+money|net\s+loss)/.test(ql)){
+    f.filters.push({col:'ROAQ',op:'<',val:0,scope:'panel',quarter:'last'});
+    f.pills.push({label:'ROA < 0 (Q4 2025)',kind:'ok'});
+  }
+  m = ql.match(/(?:nim|net\s+interest\s+margin)\s+(below|under|<=?)\s+(\d+(?:\.\d+)?)\s*%?/);
+  if(m){
+    f.filters.push({col:'NIMQY1',op:'<',val:parseFloat(m[2]),scope:'panel',quarter:'last'});
+    f.pills.push({label:`NIM < ${m[2]}%`,kind:'ok'});
+  }
+
+  return f;
+}
+
+function applyFilter(spec){
+  const last = PANEL.quarters.length-1;
+  const out=[];
+  for(const inst of INST){
+    if(!inst.CERT) continue;
+    let ok=true;
+    for(const fl of spec.filters){
+      if(fl.scope==='inst'){
+        const v=inst[fl.col];
+        if(fl.op==='='   && v!==fl.val) {ok=false;break;}
+        if(fl.op==='in'  && !fl.val.includes(v)) {ok=false;break;}
+      } else if(fl.scope==='panel' || fl.scope==='derived'){
+        const b = PANEL.banks[inst.CERT];
+        if(!b){ok=false;break;}
+        let v;
+        if(fl.scope==='derived' && fl.col==='__uninsured_pct'){
+          const dep = b.DEP[last], ins = b.DEPINS[last];
+          if(!dep||!ins){ok=false;break;}
+          v = (1 - ins/dep) * 100;
+        } else {
+          v = b[fl.col] && b[fl.col][last];
+        }
+        if(v===null||v===undefined){ok=false;break;}
+        if(fl.op==='>'  && !(v>fl.val)) {ok=false;break;}
+        if(fl.op==='<'  && !(v<fl.val)) {ok=false;break;}
+      }
+    }
+    if(ok) out.push(inst);
+  }
+  return out;
+}
+
+function runQuery(){
+  document.getElementById('errBox').innerHTML='';
+  const q=document.getElementById('nlq').value.trim();
+  if(!q){ return; }
+  const spec=parseNL(q);
+  const ib=document.getElementById('interpBox');
+  ib.className='interp';
+  if(spec.pills.length){
+    ib.innerHTML = '<span class="lbl">Interpreted as</span>' +
+      spec.pills.map(p=>`<span class="pill ${p.kind==='warn'?'warn':''}">${p.label}</span>`).join('');
+  } else {
+    ib.innerHTML = '<span class="empty">No structured filters extracted — refine with thresholds (e.g. "assets over 1 billion") or click variables in the left panel.</span>';
+  }
+  const matched = spec.filters.length ? applyFilter(spec) : INST.slice(0,500);
+  renderResults(matched);
+}
+
+function animateNum(el, target, opts={}){
+  const start=performance.now(), dur=opts.dur||650;
+  const from=parseFloat(el.dataset.cur||'0');
+  el.dataset.cur=target;
+  function tick(t){
+    const k=Math.min(1,(t-start)/dur);
+    const e=1-Math.pow(1-k,3);
+    const v=from+(target-from)*e;
+    el.textContent = opts.fmt ? opts.fmt(v) : Math.round(v).toLocaleString();
+    if(k<1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function renderResults(rows){
+  const last = PANEL.quarters.length-1;
+  let tot_a=0,tot_d=0,eqs=[];
+  for(const r of rows){
+    if(typeof r.ASSET==='number') tot_a+=r.ASSET;
+    if(typeof r.DEP==='number')   tot_d+=r.DEP;
+    const b=PANEL.banks[r.CERT];
+    if(b && typeof b.EQV[last]==='number') eqs.push(b.EQV[last]);
+  }
+  animateNum(document.getElementById('matchN'), rows.length);
+  animateNum(document.getElementById('matchAsset'), tot_a/1e6, {fmt:v=>v.toLocaleString(undefined,{maximumFractionDigits:1})});
+  animateNum(document.getElementById('matchDep'),   tot_d/1e6, {fmt:v=>v.toLocaleString(undefined,{maximumFractionDigits:1})});
+  document.getElementById('matchEqv').textContent   = eqs.length ? median(eqs).toFixed(2)+'%' : '—';
+
+  const tb = document.querySelector('#resultsTable tbody');
+  rows.sort((a,b)=>(b.ASSET||0)-(a.ASSET||0));
+  const cap = rows.slice(0,300);
+  tb.innerHTML = cap.map(r=>{
+    const b = PANEL.banks[r.CERT] || {};
+    const eq = (b.EQV||[])[last]; const roa=(b.ROAQ||[])[last];
+    const dep=(b.DEP||[])[last]; const ins=(b.DEPINS||[])[last];
+    const ld =(b.LNLSDEPR||[])[last];
+    const uni = (dep&&ins) ? ((1-ins/dep)*100) : null;
+    const uniColor = uni>50?'var(--coral)':uni>30?'var(--amber)':'var(--text)';
+    const roaColor = roa<0?'var(--coral)':'var(--text)';
+    return `<tr>
+      <td class="cert">${r.CERT||''}</td>
+      <td class="bank">${escapeHtml(r.NAME||'')}</td>
+      <td>${escapeHtml(r.STALP||'')}</td>
+      <td>${escapeHtml(r.CITY||'')}</td>
+      <td>${escapeHtml(r.BKCLASS||'')}</td>
+      <td class="num">${num(r.ASSET)}</td>
+      <td class="num">${num(r.DEP)}</td>
+      <td class="num">${eq?eq.toFixed(2):'—'}</td>
+      <td class="num" style="color:${roaColor}">${roa?roa.toFixed(2):'—'}</td>
+      <td class="num" style="color:${uniColor}">${uni?uni.toFixed(1):'—'}</td>
+      <td class="num">${ld?ld.toFixed(1):'—'}</td>
+    </tr>`;
+  }).join('') + (rows.length>300?`<tr><td colspan="11" style="color:var(--muted);font-style:italic;text-align:center;padding:14px">${rows.length-300} additional matches not shown — sorted by asset size desc.</td></tr>`:'');
+}
+
+function num(v){ if(v===null||v===undefined||isNaN(v))return '—';
+  return Number(v).toLocaleString(undefined,{maximumFractionDigits:0}); }
+function median(a){ const s=a.slice().sort((x,y)=>x-y); const n=s.length;
+  return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2; }
+function escapeHtml(s){ if(s===null||s===undefined)return '';
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('chip')){ document.getElementById('nlq').value=e.target.dataset.q; runQuery(); }
+  if(e.target.classList.contains('tab')){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    e.target.classList.add('active');
+    const t=e.target.dataset.tab;
+    document.getElementById('resultsTab').style.display=(t==='results')?'':'none';
+    document.getElementById('varsTab').style.display=(t==='vars')?'':'none';
+  }
+});
+document.getElementById('runBtn').addEventListener('click',runQuery);
+document.getElementById('nlq').addEventListener('keydown',e=>{
+  if(e.key==='Enter' && (e.metaKey||e.ctrlKey)){ runQuery(); }
+});
+
+loadData().catch(e=>{
+  document.getElementById('errBox').innerHTML =
+    `<div class="err"><b>Could not load data.</b> Open this file via a local server, e.g.<br>
+    <code>cd FDIC-Prototype-Data/prototypes &amp;&amp; python3 -m http.server 8765</code><br>
+    then visit <code>http://localhost:8765/semantic_layer.html</code>.<br>
+    Browsers block <code>fetch()</code> on <code>file://</code> URLs.<br>
+    Error: ${e.message}</div>`;
+});
+</script>
+</body>
+</html>
