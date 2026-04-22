@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Regional Heatmap · FDIC Insight Suite</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{--bg-0:#05070f;--surface:rgba(20,28,52,.62);--surface-3:rgba(11,16,34,.85);
+    --border:rgba(120,148,210,.16);--border-strong:rgba(140,170,230,.32);
+    --text:#e8edf7;--text-dim:#a4b0cf;--muted:#6f7d9e;--accent:#5cc8ff;--accent-2:#9d7cff;
+    --gold:#f0c674;--emerald:#34d399;--amber:#fbbf24;--coral:#fb7185;--crimson:#ef4444;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg-0);color:var(--text);font-family:'Inter',sans-serif;font-size:13.5px;line-height:1.55;overflow:hidden;-webkit-font-smoothing:antialiased;animation:fade .45s ease-out}
+  @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+  .bg-mesh{position:fixed;inset:0;z-index:-2;
+    background:radial-gradient(ellipse 60% 50% at 0% 100%,rgba(157,124,255,.08),transparent 60%),
+    radial-gradient(ellipse 60% 40% at 100% 0%,rgba(92,200,255,.08),transparent 60%),var(--bg-0)}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);height:62px;background:linear-gradient(180deg,rgba(8,12,28,.88),rgba(8,12,28,.55));backdrop-filter:blur(14px)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:28px;height:28px;border-radius:7px;background:conic-gradient(from 220deg,var(--accent),var(--accent-2),var(--gold),var(--accent));box-shadow:0 0 16px rgba(92,200,255,.35),inset 0 0 0 1px rgba(255,255,255,.1);position:relative}
+  .brand-mark::after{content:'';position:absolute;inset:4px;border-radius:4px;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.25),transparent 60%),var(--bg-0)}
+  .brand-text{display:flex;flex-direction:column;line-height:1.1}
+  .brand-text .nm{font-weight:700;font-size:13px;letter-spacing:-.01em}
+  .brand-text .sub{font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+  .topbar a.back{color:var(--text-dim);text-decoration:none;font-size:12.5px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace;transition:.2s}
+  .topbar a.back:hover{color:var(--accent);border-color:var(--border-strong)}
+  .topbar-right{display:flex;align-items:center;gap:18px;font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .topbar-right .badge-app{padding:3px 10px;border-radius:5px;background:rgba(157,124,255,.12);color:var(--accent-2);border:1px solid rgba(157,124,255,.3);font-weight:600}
+
+  .container{display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 62px)}
+  aside{border-right:1px solid var(--border);background:var(--surface-3);overflow-y:auto;padding:22px 20px}
+  aside h2{font-size:10.5px;text-transform:uppercase;color:var(--muted);letter-spacing:.14em;margin:0 0 10px;font-weight:600}
+  aside .group{margin-bottom:20px}
+  aside select{width:100%;background:rgba(5,7,15,.65);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:12.5px;outline:0;font-family:inherit}
+  aside select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(92,200,255,.12)}
+  .help{font-size:11.5px;color:var(--muted);line-height:1.6;padding:12px 14px;background:rgba(15,21,43,.55);border-radius:8px;border:1px solid var(--border);margin-top:6px}
+  .help b{color:var(--text-dim);font-weight:500}
+
+  main{overflow-y:auto;padding:22px 26px}
+  .stat-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .stat{background:var(--surface);border:1px solid var(--border);padding:16px 18px;border-radius:12px;backdrop-filter:blur(12px);box-shadow:0 2px 12px rgba(0,0,0,.16)}
+  .stat .l{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;font-weight:600}
+  .stat .v{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;margin-top:6px;letter-spacing:-.02em;background:linear-gradient(180deg,#fff,#a8b8d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .delta{font-size:11.5px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:14px;backdrop-filter:blur(12px);box-shadow:0 2px 14px rgba(0,0,0,.18)}
+  .panel-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .panel-head h3{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--text-dim);font-weight:600}
+  .map{padding:16px 20px 20px}
+  .grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+  .cell{aspect-ratio:1.1;border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;background:rgba(120,148,210,.08);border:1px solid var(--border);transition:transform .18s,box-shadow .18s;position:relative}
+  .cell:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(0,0,0,.35);z-index:2;border-color:var(--border-strong)}
+  .cell .st{font-size:10px;letter-spacing:.1em;color:var(--text);opacity:.85;font-weight:700;font-family:'JetBrains Mono',monospace}
+  .cell .mv{font-size:17px;font-weight:600;font-family:'JetBrains Mono',monospace;line-height:1.05;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+  .cell .mc{font-size:9.5px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;letter-spacing:.06em}
+
+  .panel-body{padding:16px 20px}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:.1em;text-align:left;padding:10px 12px;font-weight:600;border-bottom:1px solid var(--border);cursor:pointer}
+  th.num{text-align:right} th:hover{color:var(--accent)}
+  td{padding:8px 12px;border-bottom:1px solid rgba(120,148,210,.06);font-size:12.5px}
+  td.num{text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+  tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  tr:hover td{background:rgba(92,200,255,.04)}
+
+  .legend{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .legend .grad{width:120px;height:10px;border-radius:3px;background:linear-gradient(90deg,#2a3554,#22d3ee,#fde68a,#ef4444)}
+
+  .err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);color:#fca5a5;padding:14px 18px;border-radius:10px;margin-bottom:14px;font-size:13px}
+  .err code{background:rgba(5,7,15,.5);border:1px solid var(--border);padding:2px 7px;border-radius:4px;font-size:12px;font-family:'JetBrains Mono',monospace}
+  aside::-webkit-scrollbar,main::-webkit-scrollbar{width:8px;height:8px}
+  aside::-webkit-scrollbar-thumb,main::-webkit-scrollbar-thumb{background:rgba(140,170,230,.18);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div class="brand-text">
+      <div class="nm">FDIC Insight Suite</div>
+      <div class="sub">Regional Heatmap · App #06</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge-app">REGIONAL</span>
+    <span id="meta">Loading…</span>
+    <a class="back" href="index.html">← Suite</a>
+  </div>
+</div>
+
+<div class="container">
+  <aside>
+    <div class="group"><h2>As-of quarter</h2><select id="qtr"></select></div>
+    <div class="group">
+      <h2>Metric</h2>
+      <select id="metric">
+        <option value="ROAQ">ROA (%)</option>
+        <option value="NIMQY1">NIM (%)</option>
+        <option value="EEFFR">Efficiency ratio (%)</option>
+        <option value="LNLSDEPR">Loans / deposits (%)</option>
+        <option value="NPERFV">Non-performing loans (%)</option>
+        <option value="LNRERT1R" selected>CRE / Tier 1 (%)</option>
+        <option value="DEPI">Uninsured deposits ($M)</option>
+        <option value="RBC1RWAJ">Tier 1 RBC (%)</option>
+      </select>
+    </div>
+    <div class="group">
+      <h2>Aggregation</h2>
+      <select id="agg">
+        <option value="median">Median (unweighted)</option>
+        <option value="mean" selected>Asset-weighted mean</option>
+        <option value="count">Bank count</option>
+      </select>
+    </div>
+    <div class="group">
+      <h2>Min assets per bank ($M)</h2>
+      <select id="floor">
+        <option value="0">None</option>
+        <option value="100" selected>≥ $100M</option>
+        <option value="500">≥ $500M</option>
+        <option value="1000">≥ $1B</option>
+      </select>
+    </div>
+    <div class="help">
+      <b>State-level rollup:</b><br>
+      Aggregates the active bank panel by state using either the unweighted median, the asset-weighted mean, or a raw bank count. Color scale is clipped at p5/p95 within the current metric so the map isn't dominated by outliers.<br><br>
+      <b>Click</b> any state cell for the per-state distribution and top/bottom banks.
+    </div>
+  </aside>
+
+  <main>
+    <div id="errBox"></div>
+    <div class="stat-bar">
+      <div class="stat"><div class="l">States covered</div><div class="v" id="kStates">—</div><div class="delta" id="kDelta">&nbsp;</div></div>
+      <div class="stat"><div class="l">National median</div><div class="v" id="kMed">—</div><div class="delta" id="kMetricLbl"></div></div>
+      <div class="stat"><div class="l">Hottest state</div><div class="v" id="kHot">—</div><div class="delta" id="kHotV"></div></div>
+      <div class="stat"><div class="l">Coolest state</div><div class="v" id="kCool">—</div><div class="delta" id="kCoolV"></div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>State heatmap · click to drill in</h3>
+        <div class="legend"><span id="legLo">low</span><span class="grad"></span><span id="legHi">high</span></div>
+      </div>
+      <div class="map"><div class="grid" id="map"></div></div>
+    </div>
+
+    <div class="panel" id="drillPanel" style="display:none">
+      <div class="panel-head">
+        <h3 id="drillTitle">State drill-down</h3>
+      </div>
+      <div class="panel-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:.12em;margin-bottom:6px">Top 10 banks · selected metric</div>
+            <table id="topTbl"><thead><tr><th>Bank</th><th class="num">Assets ($M)</th><th class="num" id="mhead1">Value</th></tr></thead><tbody></tbody></table>
+          </div>
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:.12em;margin-bottom:6px">Bottom 10 banks · selected metric</div>
+            <table id="botTbl"><thead><tr><th>Bank</th><th class="num">Assets ($M)</th><th class="num" id="mhead2">Value</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+let PANEL=null;
+const QTR_DEFAULT=7;
+Chart.defaults.color='#a4b0cf';Chart.defaults.font.family="'Inter',sans-serif";Chart.defaults.font.size=10.5;
+
+async function loadData(){
+  PANEL=await fetch('./data/liquidity_panel.json').then(r=>r.json());
+  const q=document.getElementById('qtr');
+  PANEL.quarters.forEach((qq,i)=>q.innerHTML += `<option value="${i}" ${i===QTR_DEFAULT?'selected':''}>${qq}</option>`);
+  document.getElementById('meta').textContent=`${Object.keys(PANEL.banks).length.toLocaleString()} banks · state rollups`;
+  recompute();
+}
+
+function metricLabel(){return document.querySelector('#metric option:checked').textContent}
+
+function computeStates(){
+  const qIdx=+document.getElementById('qtr').value;
+  const metric=document.getElementById('metric').value;
+  const agg=document.getElementById('agg').value;
+  const floor=+document.getElementById('floor').value*1000;
+  const byState={};
+  for(const cert in PANEL.banks){
+    const b=PANEL.banks[cert];const m=b._meta||{};
+    if(m.active!=='1')continue;
+    if(!m.state)continue;
+    const asset=b.ASSET?.[qIdx];
+    if(asset==null||asset<floor)continue;
+    const v=b[metric]?.[qIdx];
+    (byState[m.state]=byState[m.state]||[]).push({cert,name:m.name,asset,v});
+  }
+  const rows=[];
+  for(const st in byState){
+    const arr=byState[st];
+    const vals=arr.map(x=>x.v).filter(x=>x!=null);
+    let val=null;
+    if(agg==='count') val=arr.length;
+    else if(agg==='median'){
+      if(vals.length){const s=[...vals].sort((a,b)=>a-b);val=s[Math.floor(s.length/2)]}
+    } else { // asset-weighted mean
+      let num=0,den=0;arr.forEach(x=>{if(x.v!=null && x.asset!=null){num+=x.v*x.asset;den+=x.asset}});
+      val = den>0? num/den : null;
+    }
+    rows.push({state:st,val,n:arr.length,banks:arr});
+  }
+  return rows.sort((a,b)=>a.state.localeCompare(b.state));
+}
+
+function quantile(arr,p){if(!arr.length)return null;const s=[...arr].sort((a,b)=>a-b);return s[Math.min(s.length-1,Math.floor(p*s.length))]}
+
+function colorFor(v,lo,hi){
+  if(v==null||hi==lo)return 'rgba(120,148,210,.08)';
+  const t=Math.max(0,Math.min(1,(v-lo)/(hi-lo)));
+  // interp through #2a3554 -> #22d3ee -> #fde68a -> #ef4444
+  const stops=[[42,53,84],[34,211,238],[253,230,138],[239,68,68]];
+  const pos=t*(stops.length-1);const i=Math.floor(pos);const f=pos-i;
+  const a=stops[i],b=stops[Math.min(stops.length-1,i+1)];
+  const r=Math.round(a[0]+(b[0]-a[0])*f),g=Math.round(a[1]+(b[1]-a[1])*f),bl=Math.round(a[2]+(b[2]-a[2])*f);
+  return `rgba(${r},${g},${bl},0.85)`;
+}
+
+function fmt(v){if(v==null||isNaN(v))return '—';if(Math.abs(v)>=1000000)return (v/1e6).toFixed(1)+'M';if(Math.abs(v)>=1000)return (v/1000).toFixed(1)+'K';return v.toFixed(Math.abs(v)<5?2:1)}
+function num(v){if(v==null||isNaN(v))return '—';return Number(v).toLocaleString(undefined,{maximumFractionDigits:0})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+let LAST_ROWS=[];
+function renderMap(){
+  const rows=computeStates();LAST_ROWS=rows;
+  const vals=rows.map(r=>r.val).filter(v=>v!=null);
+  const lo=quantile(vals,0.05),hi=quantile(vals,0.95);
+  const med=quantile(vals,0.5);
+  document.getElementById('kStates').textContent=rows.length;
+  document.getElementById('kMed').textContent=med==null?'—':fmt(med);
+  document.getElementById('kMetricLbl').textContent=metricLabel();
+  document.getElementById('legLo').textContent=lo==null?'':fmt(lo);
+  document.getElementById('legHi').textContent=hi==null?'':fmt(hi);
+  const sortedNonNull=rows.filter(r=>r.val!=null).sort((a,b)=>b.val-a.val);
+  const hot=sortedNonNull[0],cool=sortedNonNull[sortedNonNull.length-1];
+  document.getElementById('kHot').textContent=hot?.state||'—';
+  document.getElementById('kHotV').textContent=hot?fmt(hot.val):'';
+  document.getElementById('kCool').textContent=cool?.state||'—';
+  document.getElementById('kCoolV').textContent=cool?fmt(cool.val):'';
+  const m=document.getElementById('map');
+  m.innerHTML=rows.map(r=>`
+    <div class="cell" data-state="${r.state}" style="background:${colorFor(r.val,lo,hi)}">
+      <div class="st">${r.state}</div>
+      <div class="mv">${r.val==null?'—':fmt(r.val)}</div>
+      <div class="mc">${r.n} banks</div>
+    </div>`).join('');
+  m.querySelectorAll('.cell').forEach(el=>el.addEventListener('click',()=>drill(el.dataset.state)));
+}
+
+function drill(st){
+  const row=LAST_ROWS.find(r=>r.state===st);if(!row)return;
+  document.getElementById('drillPanel').style.display='';
+  document.getElementById('drillTitle').textContent=`${st} · ${metricLabel()} · ${row.n} banks`;
+  const metric=document.getElementById('metric').value;
+  document.getElementById('mhead1').textContent=metricLabel();
+  document.getElementById('mhead2').textContent=metricLabel();
+  const banks=row.banks.filter(b=>b.v!=null);
+  const top=[...banks].sort((a,b)=>b.v-a.v).slice(0,10);
+  const bot=[...banks].sort((a,b)=>a.v-b.v).slice(0,10);
+  const tb=(tblSel,arr)=>{
+    document.querySelector(tblSel+' tbody').innerHTML=arr.map(b=>`
+      <tr><td><a href="bank_profile.html?cert=${b.cert}" style="color:var(--text);text-decoration:none">${esc(b.name||'')}</a></td>
+      <td class="num">${num(b.asset/1000)}</td>
+      <td class="num">${fmt(b.v)}</td></tr>`).join('');
+  };
+  tb('#topTbl',top);tb('#botTbl',bot);
+}
+
+function recompute(){renderMap()}
+['qtr','metric','agg','floor'].forEach(id=>document.getElementById(id).addEventListener('change',recompute));
+
+loadData().catch(e=>{
+  document.getElementById('errBox').innerHTML=`<div class="err"><b>Could not load data.</b><br>Serve over HTTP: <code>python3 -m http.server 8765</code>.<br>Error: ${e.message}</div>`;
+});
+</script>
+<script src="theme.js"></script>
+</body>
+</html>
