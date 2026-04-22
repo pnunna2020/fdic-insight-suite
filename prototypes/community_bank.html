@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Community Bank Lens · FDIC Insight Suite</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{--bg-0:#05070f;--surface:rgba(20,28,52,.62);--surface-3:rgba(11,16,34,.85);
+    --border:rgba(120,148,210,.16);--border-strong:rgba(140,170,230,.32);
+    --text:#e8edf7;--text-dim:#a4b0cf;--muted:#6f7d9e;--accent:#5cc8ff;--accent-2:#9d7cff;
+    --gold:#f0c674;--emerald:#34d399;--amber:#fbbf24;--coral:#fb7185;--crimson:#ef4444;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg-0);color:var(--text);font-family:'Inter',sans-serif;font-size:13.5px;line-height:1.55;overflow:hidden;-webkit-font-smoothing:antialiased;animation:fade .45s ease-out}
+  @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+  .bg-mesh{position:fixed;inset:0;z-index:-2;
+    background:radial-gradient(ellipse 60% 50% at 0% 100%,rgba(52,211,153,.07),transparent 60%),
+    radial-gradient(ellipse 60% 40% at 100% 0%,rgba(240,198,116,.08),transparent 60%),var(--bg-0)}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);height:62px;background:linear-gradient(180deg,rgba(8,12,28,.88),rgba(8,12,28,.55));backdrop-filter:blur(14px)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:28px;height:28px;border-radius:7px;background:conic-gradient(from 220deg,var(--accent),var(--accent-2),var(--gold),var(--accent));box-shadow:0 0 16px rgba(92,200,255,.35),inset 0 0 0 1px rgba(255,255,255,.1);position:relative}
+  .brand-mark::after{content:'';position:absolute;inset:4px;border-radius:4px;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.25),transparent 60%),var(--bg-0)}
+  .brand-text{display:flex;flex-direction:column;line-height:1.1}
+  .brand-text .nm{font-weight:700;font-size:13px;letter-spacing:-.01em}
+  .brand-text .sub{font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+  .topbar a.back{color:var(--text-dim);text-decoration:none;font-size:12.5px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace;transition:.2s}
+  .topbar a.back:hover{color:var(--accent);border-color:var(--border-strong)}
+  .topbar-right{display:flex;align-items:center;gap:18px;font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .topbar-right .badge-app{padding:3px 10px;border-radius:5px;background:rgba(52,211,153,.12);color:var(--emerald);border:1px solid rgba(52,211,153,.3);font-weight:600}
+
+  .container{display:grid;grid-template-columns:280px 1fr 460px;height:calc(100vh - 62px)}
+  aside{border-right:1px solid var(--border);background:var(--surface-3);overflow-y:auto;padding:22px 20px}
+  aside h2{font-size:10.5px;text-transform:uppercase;color:var(--muted);letter-spacing:.14em;margin:0 0 10px;font-weight:600}
+  aside .group{margin-bottom:20px}
+  aside select{width:100%;background:rgba(5,7,15,.65);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:12.5px;outline:0;font-family:inherit}
+  aside select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(92,200,255,.12)}
+  .slider-row{display:flex;align-items:center;gap:10px}
+  .slider-row input[type=range]{flex:1;accent-color:var(--emerald)}
+  .slider-row .v{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--emerald);min-width:68px;text-align:right;font-variant-numeric:tabular-nums}
+  .help{font-size:11.5px;color:var(--muted);line-height:1.6;padding:12px 14px;background:rgba(15,21,43,.55);border-radius:8px;border:1px solid var(--border);margin-top:6px}
+  .help b{color:var(--text-dim);font-weight:500}
+
+  main{overflow-y:auto;padding:22px 26px}
+  .stat-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .stat{background:var(--surface);border:1px solid var(--border);padding:16px 18px;border-radius:12px;position:relative;overflow:hidden;backdrop-filter:blur(12px);box-shadow:0 2px 12px rgba(0,0,0,.16);transition:transform .2s,border-color .2s}
+  .stat:hover{transform:translateY(-2px);border-color:var(--border-strong)}
+  .stat::before{content:'';position:absolute;inset:0;border-radius:12px;background:linear-gradient(135deg,rgba(52,211,153,.06),transparent 60%);pointer-events:none}
+  .stat .l{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;font-weight:600}
+  .stat .v{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;margin-top:6px;letter-spacing:-.02em;background:linear-gradient(180deg,#fff,#a8b8d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .delta{font-size:11.5px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:14px;backdrop-filter:blur(12px);box-shadow:0 2px 14px rgba(0,0,0,.18)}
+  .panel-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .panel-head h3{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--text-dim);font-weight:600}
+  .search-input{background:rgba(5,7,15,.65);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:12px;width:240px;outline:0;font-family:inherit}
+  .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(92,200,255,.12)}
+  .tbl-scroll{overflow:auto;max-height:calc(100vh - 300px)}
+  table{width:100%;border-collapse:collapse}
+  thead{position:sticky;top:0;z-index:1}
+  th{font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:.1em;text-align:left;padding:12px 12px;font-weight:600;background:rgba(11,16,34,.96);border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+  th:hover{color:var(--accent)} th.num{text-align:right}
+  td{padding:9px 12px;border-bottom:1px solid rgba(120,148,210,.06);font-size:12.5px;color:var(--text)}
+  tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  td.num{text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+  td.bank{font-weight:500}
+  tr{cursor:pointer;transition:background .15s}
+  tr:hover td{background:rgba(52,211,153,.05)}
+  tr.selected td{background:rgba(52,211,153,.1);box-shadow:inset 3px 0 0 var(--emerald)}
+  .health{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.04em;font-family:'JetBrains Mono',monospace}
+  .health.strong{background:rgba(52,211,153,.18);color:#6ee7b7}
+  .health.solid{background:rgba(92,200,255,.14);color:#93d7fc}
+  .health.okay{background:rgba(240,198,116,.14);color:#fde68a}
+  .health.weak{background:rgba(251,113,133,.14);color:#fca5a5}
+
+  #detail{border-left:1px solid var(--border);background:var(--surface-3);overflow-y:auto;padding:22px 24px}
+  .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:var(--muted);font-size:13px;padding:0 30px;line-height:1.65}
+  .placeholder .icon{font-size:36px;margin-bottom:14px;opacity:.4}
+  #detail h3.bn{margin:0 0 4px;font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+  #detail .sub{color:var(--muted);font-size:11.5px;margin-bottom:18px;font-family:'JetBrains Mono',monospace}
+  .section-lbl{margin-top:20px;font-size:10.5px;text-transform:uppercase;color:var(--text-dim);letter-spacing:.14em;font-weight:600;margin-bottom:10px}
+  .kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+  .kv{background:rgba(11,16,34,.6);border:1px solid var(--border);border-radius:9px;padding:11px 13px}
+  .kv .l{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:3px}
+  .kv .v{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:600;letter-spacing:-.01em}
+  #detail canvas{margin:6px 0 12px;max-height:200px}
+  .err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);color:#fca5a5;padding:14px 18px;border-radius:10px;margin-bottom:14px;font-size:13px}
+  .err code{background:rgba(5,7,15,.5);border:1px solid var(--border);padding:2px 7px;border-radius:4px;font-size:12px;font-family:'JetBrains Mono',monospace}
+  aside::-webkit-scrollbar,main::-webkit-scrollbar,#detail::-webkit-scrollbar,.tbl-scroll::-webkit-scrollbar{width:8px;height:8px}
+  aside::-webkit-scrollbar-thumb,main::-webkit-scrollbar-thumb,#detail::-webkit-scrollbar-thumb,.tbl-scroll::-webkit-scrollbar-thumb{background:rgba(140,170,230,.18);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div class="brand-text">
+      <div class="nm">FDIC Insight Suite</div>
+      <div class="sub">Community Bank Lens · App #09</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge-app">COMMUNITY</span>
+    <span id="meta">Loading…</span>
+    <a class="back" href="index.html">← Suite</a>
+  </div>
+</div>
+
+<div class="container">
+  <aside>
+    <div class="group"><h2>As-of quarter</h2><select id="qtr"></select></div>
+    <div class="group"><h2>State</h2><select id="state"><option value="">All states</option></select></div>
+    <div class="group">
+      <h2>Asset ceiling ($M)</h2>
+      <div class="slider-row"><input id="maxAsset" type="range" min="100" max="20000" value="10000" step="100"><div class="v" id="maxAssetV">10,000</div></div>
+    </div>
+    <div class="group">
+      <h2>Asset floor ($M)</h2>
+      <div class="slider-row"><input id="minAsset" type="range" min="0" max="1000" value="50" step="10"><div class="v" id="minAssetV">50</div></div>
+    </div>
+    <div class="group">
+      <h2>Bank class</h2>
+      <select id="bclass">
+        <option value="">All classes</option>
+        <option value="N">N — National</option>
+        <option value="NM">NM — State, non-Fed</option>
+        <option value="SM">SM — State, Fed</option>
+        <option value="SB">SB — Savings bank</option>
+      </select>
+    </div>
+    <div class="help">
+      <b>Community banking lens:</b><br>
+      Restricts the panel to banks under the FDIC's traditional community-bank threshold (≤$10B assets) and focuses on the metrics most relevant to local lenders: core deposits, NIM, ROA, efficiency, and employee density.<br><br>
+      Composite "health" rank combines ROA, efficiency, NIM, L/D, and core-deposit share into a single A/B/C/D grade.
+    </div>
+  </aside>
+
+  <main>
+    <div id="errBox"></div>
+    <div class="stat-bar">
+      <div class="stat"><div class="l">Community banks</div><div class="v" id="kBanks">—</div><div class="delta" id="kDelta">under ceiling</div></div>
+      <div class="stat"><div class="l">Median ROA (%)</div><div class="v" id="kROA">—</div><div class="delta">quarterly annualized</div></div>
+      <div class="stat"><div class="l">Median NIM (%)</div><div class="v" id="kNIM">—</div><div class="delta">net interest margin</div></div>
+      <div class="stat"><div class="l">Core-deposit median (%)</div><div class="v" id="kCD">—</div><div class="delta">of total deposits</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Community bank roster · click to drill in</h3>
+        <input id="searchBank" type="text" class="search-input" placeholder="Search by name or CERT…" />
+      </div>
+      <div class="tbl-scroll">
+        <table id="rank">
+          <thead><tr>
+            <th data-sort="health">Health</th>
+            <th data-sort="name">Bank</th>
+            <th>State</th>
+            <th class="num" data-sort="asset">Assets ($M)</th>
+            <th class="num" data-sort="roa">ROA (%)</th>
+            <th class="num" data-sort="nim">NIM (%)</th>
+            <th class="num" data-sort="eff">Efficiency (%)</th>
+            <th class="num" data-sort="ldr">L/D (%)</th>
+            <th class="num" data-sort="cd">Core dep (%)</th>
+            <th class="num" data-sort="emp">Staff</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div id="detail">
+    <div class="placeholder">
+      <div class="icon">◉</div>
+      Pick a community bank to see 8-quarter ROA / NIM / efficiency trends and headline ratios.
+    </div>
+  </div>
+</div>
+
+<script>
+let PANEL=null,sortKey='asset',sortDir='desc';
+const QTR_DEFAULT=7;
+Chart.defaults.color='#a4b0cf';Chart.defaults.font.family="'Inter',sans-serif";Chart.defaults.font.size=10.5;
+
+async function loadData(){
+  PANEL=await fetch('./data/liquidity_panel.json').then(r=>r.json());
+  const states=new Set();
+  for(const c in PANEL.banks){const s=PANEL.banks[c]._meta?.state;if(s)states.add(s)}
+  const stSel=document.getElementById('state');
+  [...states].sort().forEach(s=>stSel.innerHTML+=`<option value="${s}">${s}</option>`);
+  const q=document.getElementById('qtr');
+  PANEL.quarters.forEach((qq,i)=>q.innerHTML += `<option value="${i}" ${i===QTR_DEFAULT?'selected':''}>${qq}</option>`);
+  document.getElementById('meta').textContent=`${Object.keys(PANEL.banks).length.toLocaleString()} banks · community lens (≤$10B)`;
+  recompute();
+}
+
+function healthScore(r){
+  let s=0, n=0;
+  if(r.roa!=null){s+=r.roa>1.2?4:r.roa>0.8?3:r.roa>0.4?2:r.roa>0?1:0; n+=4}
+  if(r.nim!=null){s+=r.nim>3.5?4:r.nim>3?3:r.nim>2.5?2:r.nim>2?1:0; n+=4}
+  if(r.eff!=null){s+=r.eff<55?4:r.eff<65?3:r.eff<75?2:r.eff<85?1:0; n+=4}
+  if(r.ldr!=null){s+=r.ldr<70?4:r.ldr<85?3:r.ldr<95?2:r.ldr<105?1:0; n+=4}
+  if(r.cd!=null){s+=r.cd>80?4:r.cd>70?3:r.cd>60?2:1; n+=4}
+  return n? s/n*100/4 : null;
+}
+function healthGrade(s){
+  if(s==null)return{g:'—',c:'okay'};
+  if(s>=85)return{g:'A',c:'strong'};
+  if(s>=70)return{g:'B',c:'solid'};
+  if(s>=55)return{g:'C',c:'okay'};
+  return{g:'D',c:'weak'};
+}
+
+function getRecs(qIdx){
+  const recs=[];
+  for(const cert in PANEL.banks){
+    const b=PANEL.banks[cert];const m=b._meta||{};
+    if(m.active!=='1')continue;
+    const asset=b.ASSET?.[qIdx];
+    const dep=b.DEP?.[qIdx]; const core=b.COREDEP?.[qIdx];
+    recs.push({cert,name:m.name,state:m.state,city:m.city,bclass:m.class,asset,
+      roa:b.ROAQ?.[qIdx],nim:b.NIMQY1?.[qIdx],eff:b.EEFFR?.[qIdx],
+      ldr:b.LNLSDEPR?.[qIdx], emp:b.NUMEMP?.[qIdx],
+      cd: (core!=null && dep) ? (core/dep*100) : null});
+  }
+  recs.forEach(r=>r.health=healthScore(r));
+  return recs;
+}
+
+function applyFilters(recs){
+  const st=document.getElementById('state').value;
+  const cls=document.getElementById('bclass').value;
+  const maxA=+document.getElementById('maxAsset').value*1000;
+  const minA=+document.getElementById('minAsset').value*1000;
+  const q=document.getElementById('searchBank').value.trim().toLowerCase();
+  return recs.filter(r=>{
+    if(!r.asset||r.asset>maxA||r.asset<minA)return false;
+    if(st && r.state!==st)return false;
+    if(cls && r.bclass!==cls)return false;
+    if(q && !((r.name||'').toLowerCase().includes(q)||r.cert.toString().includes(q)))return false;
+    return true;
+  });
+}
+
+function renderHeader(recs){
+  const med=(arr)=>{const a=arr.filter(x=>x!=null).sort((a,b)=>a-b);return a.length?a[Math.floor(a.length/2)]:null};
+  document.getElementById('kBanks').textContent=recs.length.toLocaleString();
+  const roa=med(recs.map(r=>r.roa));const nim=med(recs.map(r=>r.nim));const cd=med(recs.map(r=>r.cd));
+  document.getElementById('kROA').textContent=roa==null?'—':roa.toFixed(2);
+  document.getElementById('kNIM').textContent=nim==null?'—':nim.toFixed(2);
+  document.getElementById('kCD').textContent=cd==null?'—':cd.toFixed(0);
+}
+
+function renderTable(recs){
+  const dir=sortDir==='desc'?-1:1;const k=sortKey;
+  recs.sort((a,b)=>{const av=a[k],bv=b[k];if(typeof av==='string')return dir*((av||'').localeCompare(bv||''));return dir*((av==null?-Infinity:av)-(bv==null?-Infinity:bv))});
+  const cap=recs.slice(0,500);
+  const tb=document.querySelector('#rank tbody');
+  tb.innerHTML=cap.map(r=>{
+    const hg=healthGrade(r.health);
+    return `<tr data-cert="${r.cert}">
+      <td><span class="health ${hg.c}">${hg.g}</span></td>
+      <td class="bank">${esc(r.name||'')}</td>
+      <td>${r.state||''}</td>
+      <td class="num">${num(r.asset/1000)}</td>
+      <td class="num">${r.roa==null?'—':r.roa.toFixed(2)}</td>
+      <td class="num">${r.nim==null?'—':r.nim.toFixed(2)}</td>
+      <td class="num">${r.eff==null?'—':r.eff.toFixed(1)}</td>
+      <td class="num">${r.ldr==null?'—':r.ldr.toFixed(1)}</td>
+      <td class="num">${r.cd==null?'—':r.cd.toFixed(0)}</td>
+      <td class="num">${r.emp==null?'—':num(r.emp)}</td>
+    </tr>`;
+  }).join('');
+  tb.querySelectorAll('tr').forEach(tr=>tr.addEventListener('click',()=>{
+    document.querySelectorAll('#rank tr').forEach(x=>x.classList.remove('selected'));
+    tr.classList.add('selected');
+    showDetail(+tr.dataset.cert);
+  }));
+}
+
+function showDetail(cert){
+  const b=PANEL.banks[cert];if(!b)return;const m=b._meta||{};
+  const qIdx=+document.getElementById('qtr').value;
+  const asset=b.ASSET?.[qIdx],dep=b.DEP?.[qIdx],core=b.COREDEP?.[qIdx];
+  const roa=b.ROAQ?.[qIdx],nim=b.NIMQY1?.[qIdx],eff=b.EEFFR?.[qIdx];
+  const emp=b.NUMEMP?.[qIdx];
+  const cd = (core!=null && dep)?core/dep*100:null;
+  document.getElementById('detail').innerHTML=`
+    <h3 class="bn">${esc(m.name||'')}</h3>
+    <div class="sub">CERT ${cert} · ${m.city||''}, ${m.state||''} · Class ${m.class||''} · ${PANEL.quarters[qIdx]}</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <a href="bank_profile.html?cert=${cert}" style="flex:1;text-align:center;padding:7px 10px;border:1px solid var(--border);border-radius:7px;color:var(--text-dim);text-decoration:none;font-size:11.5px;font-family:'JetBrains Mono',monospace">Full profile →</a>
+      <a href="peer_cohort.html" style="flex:1;text-align:center;padding:7px 10px;border:1px solid var(--border);border-radius:7px;color:var(--text-dim);text-decoration:none;font-size:11.5px;font-family:'JetBrains Mono',monospace">Peers →</a>
+    </div>
+    <div class="section-lbl">Community KPIs · ${PANEL.quarters[qIdx]}</div>
+    <div class="kv-grid">
+      <div class="kv"><div class="l">Total assets</div><div class="v">${asset==null?'—':'$'+fmtM(asset)}</div></div>
+      <div class="kv"><div class="l">Employees</div><div class="v">${emp==null?'—':num(emp)}</div></div>
+      <div class="kv"><div class="l">ROA</div><div class="v">${roa==null?'—':roa.toFixed(2)+'%'}</div></div>
+      <div class="kv"><div class="l">NIM</div><div class="v">${nim==null?'—':nim.toFixed(2)+'%'}</div></div>
+      <div class="kv"><div class="l">Efficiency</div><div class="v">${eff==null?'—':eff.toFixed(1)+'%'}</div></div>
+      <div class="kv"><div class="l">Core-deposit share</div><div class="v">${cd==null?'—':cd.toFixed(0)+'%'}</div></div>
+    </div>
+
+    <div class="section-lbl">ROA &amp; NIM · 8 quarters</div>
+    <canvas id="trend" height="160"></canvas>
+
+    <div class="section-lbl">Efficiency &amp; L/D · 8 quarters</div>
+    <canvas id="trend2" height="140"></canvas>
+  `;
+  new Chart(document.getElementById('trend'),{type:'line',data:{labels:PANEL.quarters,datasets:[
+    {label:'ROA (%)',data:b.ROAQ||[],borderColor:'#34d399',backgroundColor:'rgba(52,211,153,.08)',borderWidth:2,pointRadius:3,tension:.25,fill:true,yAxisID:'y'},
+    {label:'NIM (%)',data:b.NIMQY1||[],borderColor:'#5cc8ff',borderWidth:2,pointRadius:3,tension:.25,fill:false,yAxisID:'y2'}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}},scales:{x:{grid:{color:'rgba(120,148,210,.06)'}},y:{position:'left',grid:{color:'rgba(120,148,210,.06)'}},y2:{position:'right',grid:{display:false}}}}});
+  new Chart(document.getElementById('trend2'),{type:'line',data:{labels:PANEL.quarters,datasets:[
+    {label:'Efficiency (%)',data:b.EEFFR||[],borderColor:'#fbbf24',borderWidth:2,pointRadius:3,tension:.25,fill:false},
+    {label:'L/D (%)',data:b.LNLSDEPR||[],borderColor:'#9d7cff',borderWidth:2,pointRadius:3,tension:.25,fill:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}},scales:{x:{grid:{color:'rgba(120,148,210,.06)'}},y:{grid:{color:'rgba(120,148,210,.06)'}}}}});
+}
+
+function recompute(){
+  document.getElementById('minAssetV').textContent=(+document.getElementById('minAsset').value).toLocaleString();
+  document.getElementById('maxAssetV').textContent=(+document.getElementById('maxAsset').value).toLocaleString();
+  const qIdx=+document.getElementById('qtr').value;
+  const recs=getRecs(qIdx);
+  const filtered=applyFilters(recs);
+  renderHeader(filtered);
+  renderTable(filtered);
+}
+
+function num(v){if(v==null||isNaN(v))return '—';return Number(v).toLocaleString(undefined,{maximumFractionDigits:0})}
+function fmtM(v){if(v>=1e6)return (v/1e6).toFixed(2)+'B';return (v/1000).toFixed(1)+'M'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+['qtr','state','bclass'].forEach(id=>document.getElementById(id).addEventListener('change',recompute));
+['minAsset','maxAsset'].forEach(id=>document.getElementById(id).addEventListener('input',recompute));
+document.getElementById('searchBank').addEventListener('input',recompute);
+document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>{
+  const k=th.dataset.sort;if(sortKey===k)sortDir=(sortDir==='desc'?'asc':'desc');else{sortKey=k;sortDir='desc'}
+  recompute();
+}));
+
+loadData().catch(e=>{
+  document.getElementById('errBox').innerHTML=`<div class="err"><b>Could not load data.</b><br>Serve over HTTP: <code>python3 -m http.server 8765</code>.<br>Error: ${e.message}</div>`;
+});
+</script>
+<script src="theme.js"></script>
+</body>
+</html>
