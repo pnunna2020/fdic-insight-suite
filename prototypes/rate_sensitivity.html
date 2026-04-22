@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Rate Sensitivity · FDIC Insight Suite</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg-0:#05070f;--surface:rgba(20,28,52,.62);--surface-3:rgba(11,16,34,.85);
+    --border:rgba(120,148,210,.16);--border-strong:rgba(140,170,230,.32);
+    --text:#e8edf7;--text-dim:#a4b0cf;--muted:#6f7d9e;
+    --accent:#5cc8ff;--accent-2:#9d7cff;--gold:#f0c674;
+    --emerald:#34d399;--amber:#fbbf24;--coral:#fb7185;--crimson:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg-0);color:var(--text);font-family:'Inter',sans-serif;font-size:13.5px;line-height:1.55;overflow:hidden;-webkit-font-smoothing:antialiased;animation:fade .45s ease-out}
+  @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+  .bg-mesh{position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(ellipse 60% 50% at 0% 100%,rgba(251,191,36,.07),transparent 60%),
+      radial-gradient(ellipse 60% 40% at 100% 0%,rgba(92,200,255,.08),transparent 60%),
+      var(--bg-0);}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);height:62px;background:linear-gradient(180deg,rgba(8,12,28,.88),rgba(8,12,28,.55));backdrop-filter:blur(14px)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:28px;height:28px;border-radius:7px;background:conic-gradient(from 220deg,var(--accent),var(--accent-2),var(--gold),var(--accent));box-shadow:0 0 16px rgba(92,200,255,.35),inset 0 0 0 1px rgba(255,255,255,.1);position:relative}
+  .brand-mark::after{content:'';position:absolute;inset:4px;border-radius:4px;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.25),transparent 60%),var(--bg-0)}
+  .brand-text{display:flex;flex-direction:column;line-height:1.1}
+  .brand-text .nm{font-weight:700;font-size:13px;letter-spacing:-.01em}
+  .brand-text .sub{font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+  .topbar a.back{color:var(--text-dim);text-decoration:none;font-size:12.5px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace;transition:.2s}
+  .topbar a.back:hover{color:var(--accent);border-color:var(--border-strong)}
+  .topbar-right{display:flex;align-items:center;gap:18px;font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .topbar-right .badge-app{padding:3px 10px;border-radius:5px;background:rgba(251,191,36,.12);color:var(--amber);border:1px solid rgba(251,191,36,.3);font-weight:600}
+
+  .container{display:grid;grid-template-columns:280px 1fr 460px;height:calc(100vh - 62px)}
+  aside{border-right:1px solid var(--border);background:var(--surface-3);overflow-y:auto;padding:22px 20px}
+  aside h2{font-size:10.5px;text-transform:uppercase;color:var(--muted);letter-spacing:.14em;margin:0 0 10px;font-weight:600}
+  aside .group{margin-bottom:20px}
+  aside select{width:100%;background:rgba(5,7,15,.65);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:12.5px;outline:0;font-family:inherit;transition:.2s}
+  aside select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(92,200,255,.12)}
+  .slider-row{display:flex;align-items:center;gap:10px}
+  .slider-row input[type=range]{flex:1;accent-color:var(--amber)}
+  .slider-row .v{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--amber);min-width:68px;text-align:right;font-variant-numeric:tabular-nums}
+  .help{font-size:11.5px;color:var(--muted);line-height:1.6;padding:12px 14px;background:rgba(15,21,43,.55);border-radius:8px;border:1px solid var(--border);margin-top:6px}
+  .help b{color:var(--text-dim);font-weight:500}
+
+  main{overflow-y:auto;padding:22px 26px}
+  .stat-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .stat{background:var(--surface);border:1px solid var(--border);padding:16px 18px;border-radius:12px;position:relative;overflow:hidden;backdrop-filter:blur(12px);box-shadow:0 2px 12px rgba(0,0,0,.16);transition:transform .2s,border-color .2s}
+  .stat:hover{transform:translateY(-2px);border-color:var(--border-strong)}
+  .stat::before{content:'';position:absolute;inset:0;border-radius:12px;background:linear-gradient(135deg,rgba(251,191,36,.06),transparent 60%);pointer-events:none}
+  .stat .l{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;font-weight:600}
+  .stat .v{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;margin-top:6px;letter-spacing:-.02em;background:linear-gradient(180deg,#fff,#a8b8d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .v.bad{background:linear-gradient(180deg,#fda4af,#ef4444);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .v.warn{background:linear-gradient(180deg,#fde68a,#f59e0b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .delta{font-size:11.5px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:14px;backdrop-filter:blur(12px);box-shadow:0 2px 14px rgba(0,0,0,.18)}
+  .panel-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .panel-head h3{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--text-dim);font-weight:600}
+  .search-input{background:rgba(5,7,15,.65);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:12px;width:240px;outline:0;font-family:inherit}
+  .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(92,200,255,.12)}
+  .tbl-scroll{overflow:auto;max-height:calc(100vh - 300px)}
+  table{width:100%;border-collapse:collapse}
+  thead{position:sticky;top:0;z-index:1}
+  th{font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:.1em;text-align:left;padding:12px 12px;font-weight:600;background:rgba(11,16,34,.96);border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+  th:hover{color:var(--accent)} th.num{text-align:right}
+  td{padding:9px 12px;border-bottom:1px solid rgba(120,148,210,.06);font-size:12.5px;color:var(--text)}
+  tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  td.num{text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+  td.bank{font-weight:500}
+  tr{cursor:pointer;transition:background .15s}
+  tr:hover td{background:rgba(92,200,255,.05)}
+  tr.selected td{background:rgba(251,191,36,.08);box-shadow:inset 3px 0 0 var(--amber)}
+  .v-bad{color:#fca5a5;font-weight:600} .v-warn{color:#fde68a;font-weight:600} .v-ok{color:var(--text-dim)}
+
+  #detail{border-left:1px solid var(--border);background:var(--surface-3);overflow-y:auto;padding:22px 24px}
+  .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:var(--muted);font-size:13px;padding:0 30px;line-height:1.65}
+  .placeholder .icon{font-size:36px;margin-bottom:14px;opacity:.4}
+  #detail h3.bn{margin:0 0 4px;font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+  #detail .sub{color:var(--muted);font-size:11.5px;margin-bottom:18px;font-family:'JetBrains Mono',monospace}
+  .section-lbl{margin-top:20px;font-size:10.5px;text-transform:uppercase;color:var(--text-dim);letter-spacing:.14em;font-weight:600;margin-bottom:10px}
+  .kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+  .kv{background:rgba(11,16,34,.6);border:1px solid var(--border);border-radius:9px;padding:11px 13px}
+  .kv .l{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:3px}
+  .kv .v{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:600;letter-spacing:-.01em}
+  .kv .v.bad{color:#fca5a5} .kv .v.warn{color:#fde68a}
+  #detail canvas{margin:6px 0 12px;max-height:210px}
+  .reasons{background:rgba(11,16,34,.6);border-radius:9px;padding:12px 14px;font-size:12px;border:1px solid var(--border);line-height:1.55}
+  .reasons ul{margin:0;padding-left:18px}
+  .reasons li{margin-bottom:5px;color:#fde68a}
+  .reasons li.ok{color:var(--text-dim)} .reasons li.bad{color:#fca5a5}
+  .err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);color:#fca5a5;padding:14px 18px;border-radius:10px;margin-bottom:14px;font-size:13px}
+  .err code{background:rgba(5,7,15,.5);border:1px solid var(--border);padding:2px 7px;border-radius:4px;font-size:12px;font-family:'JetBrains Mono',monospace}
+  aside::-webkit-scrollbar,main::-webkit-scrollbar,#detail::-webkit-scrollbar,.tbl-scroll::-webkit-scrollbar{width:8px;height:8px}
+  aside::-webkit-scrollbar-thumb,main::-webkit-scrollbar-thumb,#detail::-webkit-scrollbar-thumb,.tbl-scroll::-webkit-scrollbar-thumb{background:rgba(140,170,230,.18);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div class="brand-text">
+      <div class="nm">FDIC Insight Suite</div>
+      <div class="sub">Rate Sensitivity · NIM Shock · App #08</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge-app">ALM</span>
+    <span id="meta">Loading…</span>
+    <a class="back" href="index.html">← Suite</a>
+  </div>
+</div>
+
+<div class="container">
+  <aside>
+    <div class="group">
+      <h2>As-of quarter</h2>
+      <select id="qtr"></select>
+    </div>
+    <div class="group">
+      <h2>State</h2>
+      <select id="state"><option value="">All states</option></select>
+    </div>
+    <div class="group">
+      <h2>Min assets ($M)</h2>
+      <div class="slider-row">
+        <input id="minAsset" type="range" min="0" max="5000" value="100" step="50">
+        <div class="v" id="minAssetV">100</div>
+      </div>
+    </div>
+    <div class="group">
+      <h2>Rate shock (bps, parallel)</h2>
+      <div class="slider-row">
+        <input id="shock" type="range" min="-400" max="400" value="200" step="25">
+        <div class="v" id="shockV">+200</div>
+      </div>
+    </div>
+    <div class="group">
+      <h2>Pass-through β (deposit)</h2>
+      <div class="slider-row">
+        <input id="beta" type="range" min="0" max="100" value="55" step="5">
+        <div class="v" id="betaV">55%</div>
+      </div>
+    </div>
+    <div class="group">
+      <h2>Asset repricing share (1yr)</h2>
+      <div class="slider-row">
+        <input id="reprice" type="range" min="10" max="70" value="35" step="5">
+        <div class="v" id="repriceV">35%</div>
+      </div>
+    </div>
+    <div class="help">
+      <b>Parametric NIM shock:</b><br>
+      ΔNIM ≈ (Δrate × asset-share-repricing) − (Δrate × β × deposit/asset). Negative NIM change = earnings compression under the shock. HTM exposure and noncore funding amplify the hit.<br><br>
+      <b>Fields used:</b> NIMQY1, LNLSDEPR, DEPI, DEPNI, SCHTMRES, ASSET.
+    </div>
+  </aside>
+
+  <main>
+    <div id="errBox"></div>
+    <div class="stat-bar">
+      <div class="stat"><div class="l">Banks modeled</div><div class="v" id="kBanks">—</div><div class="delta" id="kDelta">&nbsp;</div></div>
+      <div class="stat"><div class="l">Median ΔNIM (bps)</div><div class="v" id="kMed">—</div><div class="delta">under current shock</div></div>
+      <div class="stat"><div class="l">NIM compression &gt; 30 bps</div><div class="v warn" id="kWarn">—</div><div class="delta">meaningful earnings hit</div></div>
+      <div class="stat"><div class="l">NIM compression &gt; 60 bps</div><div class="v bad" id="kBad">—</div><div class="delta">severe earnings hit</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3>ΔNIM ranking under current shock · sort any column</h3>
+        <input id="searchBank" type="text" class="search-input" placeholder="Search by name or CERT…" />
+      </div>
+      <div class="tbl-scroll">
+        <table id="rank">
+          <thead><tr>
+            <th data-sort="name">Bank</th>
+            <th>State</th>
+            <th class="num" data-sort="asset">Assets ($M)</th>
+            <th class="num" data-sort="nim">NIM (%)</th>
+            <th class="num" data-sort="dNim">ΔNIM (bps)</th>
+            <th class="num" data-sort="htm">HTM / assets (%)</th>
+            <th class="num" data-sort="ldr">L/D (%)</th>
+            <th class="num" data-sort="nc">Noncore (%)</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div id="detail">
+    <div class="placeholder">
+      <div class="icon">Δ</div>
+      Click a bank to see its rate-shock sensitivity breakdown and 8-quarter NIM trend.
+    </div>
+  </div>
+</div>
+
+<script>
+let PANEL=null, sortKey='dNim', sortDir='asc';
+const QTR_DEFAULT = 7;
+
+Chart.defaults.color='#a4b0cf';Chart.defaults.font.family="'Inter',sans-serif";Chart.defaults.font.size=10.5;
+
+async function loadData(){
+  PANEL = await fetch('./data/liquidity_panel.json').then(r=>r.json());
+  const states=new Set();
+  for(const c in PANEL.banks){const s=PANEL.banks[c]._meta?.state;if(s)states.add(s)}
+  const stSel=document.getElementById('state');
+  [...states].sort().forEach(s=>stSel.innerHTML+=`<option value="${s}">${s}</option>`);
+  const q=document.getElementById('qtr');
+  PANEL.quarters.forEach((qq,i)=>q.innerHTML += `<option value="${i}" ${i===QTR_DEFAULT?'selected':''}>${qq}</option>`);
+  document.getElementById('meta').textContent=`${Object.keys(PANEL.banks).length.toLocaleString()} banks · parametric rate-shock lens`;
+  recompute();
+}
+
+function shockDelta(r){
+  // ΔNIM ≈ Δrate × (asset_reprice_share − β × deposit/asset)
+  const bps=+document.getElementById('shock').value;
+  const beta=+document.getElementById('beta').value/100;
+  const repr=+document.getElementById('reprice').value/100;
+  const depAsset = r.asset>0 ? (r.dep||0)/r.asset : 0;
+  const dr = bps/10000;
+  const dNim = dr * (repr - beta*depAsset); // fraction
+  // Adjust for HTM drag: a parallel hike compresses AOCI but NIM hit amplified by ~(htmShare * 0.2 * dr)
+  const htmShare = r.asset>0 ? (r.htm||0)/r.asset : 0;
+  const htmDrag = dr>0 ? -dr * htmShare * 0.2 : 0;
+  return (dNim + htmDrag) * 10000; // in bps
+}
+
+function getRecs(qIdx){
+  const recs=[];
+  for(const cert in PANEL.banks){
+    const b=PANEL.banks[cert]; const m=b._meta||{};
+    if(m.active!=='1') continue;
+    const asset=b.ASSET?.[qIdx];
+    recs.push({cert,name:m.name,state:m.state,city:m.city,bclass:m.class,asset,
+      nim:b.NIMQY1?.[qIdx], dep:b.DEP?.[qIdx], htm:b.SCHTMRES?.[qIdx],
+      ldr:b.LNLSDEPR?.[qIdx], nc:b.NCOREQ1?.[qIdx]});
+  }
+  recs.forEach(r=>r.dNim = (r.asset==null||r.nim==null)?null:shockDelta(r));
+  recs.forEach(r=>r.htmPct = (r.asset && r.htm) ? (r.htm/r.asset*100) : null);
+  return recs;
+}
+
+function applyFilters(recs){
+  const st=document.getElementById('state').value;
+  const minA=+document.getElementById('minAsset').value*1000;
+  const q=document.getElementById('searchBank').value.trim().toLowerCase();
+  return recs.filter(r=>{
+    if(st && r.state!==st) return false;
+    if(minA && (!r.asset || r.asset<minA)) return false;
+    if(q && !((r.name||'').toLowerCase().includes(q)||r.cert.toString().includes(q))) return false;
+    return true;
+  });
+}
+
+function renderHeader(recs){
+  const valid=recs.filter(r=>r.dNim!=null);
+  const sorted=valid.map(r=>r.dNim).sort((a,b)=>a-b);
+  const med=sorted.length?sorted[Math.floor(sorted.length/2)]:null;
+  const warn=valid.filter(r=>r.dNim<-30).length;
+  const bad=valid.filter(r=>r.dNim<-60).length;
+  document.getElementById('kBanks').textContent=valid.length.toLocaleString();
+  document.getElementById('kMed').textContent=med==null?'—':med.toFixed(0);
+  document.getElementById('kWarn').textContent=warn.toLocaleString();
+  document.getElementById('kBad').textContent=bad.toLocaleString();
+  document.getElementById('kDelta').textContent=`${recs.length.toLocaleString()} after filters`;
+}
+
+function renderTable(recs){
+  const dir=sortDir==='desc'?-1:1;
+  const k=sortKey;
+  recs.sort((a,b)=>{const av=a[k],bv=b[k];if(typeof av==='string')return dir*((av||'').localeCompare(bv||''));return dir*((av==null?-Infinity:av)-(bv==null?-Infinity:bv))});
+  const cap=recs.slice(0,500);
+  const tb=document.querySelector('#rank tbody');
+  tb.innerHTML=cap.map(r=>{
+    const cls=r.dNim==null?'v-ok':r.dNim<-60?'v-bad':r.dNim<-30?'v-warn':'v-ok';
+    const htmCls=r.htmPct==null?'v-ok':r.htmPct>20?'v-bad':r.htmPct>10?'v-warn':'v-ok';
+    return `
+      <tr data-cert="${r.cert}">
+        <td class="bank">${esc(r.name||'')}</td>
+        <td>${r.state||''}</td>
+        <td class="num">${num(r.asset/1000)}</td>
+        <td class="num">${r.nim==null?'—':r.nim.toFixed(2)}</td>
+        <td class="num ${cls}">${r.dNim==null?'—':(r.dNim>0?'+':'')+r.dNim.toFixed(0)}</td>
+        <td class="num ${htmCls}">${r.htmPct==null?'—':r.htmPct.toFixed(1)}</td>
+        <td class="num">${r.ldr==null?'—':r.ldr.toFixed(1)}</td>
+        <td class="num">${r.nc==null?'—':r.nc.toFixed(1)}</td>
+      </tr>`;
+  }).join('');
+  tb.querySelectorAll('tr').forEach(tr=>tr.addEventListener('click',()=>{
+    document.querySelectorAll('#rank tr').forEach(x=>x.classList.remove('selected'));
+    tr.classList.add('selected');
+    showDetail(+tr.dataset.cert);
+  }));
+}
+
+function showDetail(cert){
+  const b=PANEL.banks[cert];if(!b)return;const m=b._meta||{};
+  const qIdx=+document.getElementById('qtr').value;
+  const nim=b.NIMQY1?.[qIdx], asset=b.ASSET?.[qIdx], dep=b.DEP?.[qIdx], htm=b.SCHTMRES?.[qIdx];
+  const ldr=b.LNLSDEPR?.[qIdx], nc=b.NCOREQ1?.[qIdx];
+  const htmPct = (asset&&htm)?(htm/asset*100):null;
+  const stub={asset,nim,dep,htm};
+  const dNim = (asset==null||nim==null)?null:shockDelta({asset,nim,dep,htm});
+  const bps=+document.getElementById('shock').value;
+
+  const reasons=[];
+  if(dNim!=null){
+    if(dNim<-60) reasons.push({kind:'bad',txt:`<b>Severe NIM compression</b> under ${bps>0?'+':''}${bps} bps shock: Δ ≈ ${dNim.toFixed(0)} bps. Earnings vulnerable.`});
+    else if(dNim<-30) reasons.push({kind:'bad',txt:`<b>Material NIM compression</b>: Δ ≈ ${dNim.toFixed(0)} bps. Worth stress-testing liquidity as well.`});
+    else if(dNim<0) reasons.push({kind:'ok',txt:`Mild NIM compression: Δ ≈ ${dNim.toFixed(0)} bps. Manageable.`});
+    else reasons.push({kind:'ok',txt:`<b>NIM expansion</b> under current shock: Δ ≈ +${dNim.toFixed(0)} bps (asset-sensitive).`});
+  }
+  if(htmPct!=null && htmPct>20) reasons.push({kind:'bad',txt:`HTM book at ${htmPct.toFixed(1)}% of assets — AOCI mark-to-market drag magnified by rate hikes.`});
+  if(nc!=null && nc>25) reasons.push({kind:'bad',txt:`Noncore funding at ${nc.toFixed(1)}% — funding repricing amplifies NIM sensitivity.`});
+
+  document.getElementById('detail').innerHTML = `
+    <h3 class="bn">${esc(m.name||'')}</h3>
+    <div class="sub">CERT ${cert} · ${m.city||''}, ${m.state||''} · ${PANEL.quarters[qIdx]}</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <a href="bank_profile.html?cert=${cert}" style="flex:1;text-align:center;padding:7px 10px;border:1px solid var(--border);border-radius:7px;color:var(--text-dim);text-decoration:none;font-size:11.5px;font-family:'JetBrains Mono',monospace">Full profile →</a>
+      <a href="liquidity_monitor.html" style="flex:1;text-align:center;padding:7px 10px;border:1px solid var(--border);border-radius:7px;color:var(--text-dim);text-decoration:none;font-size:11.5px;font-family:'JetBrains Mono',monospace">Liquidity →</a>
+    </div>
+
+    <div class="section-lbl">Shock result · ${bps>0?'+':''}${bps} bps</div>
+    <div class="kv-grid">
+      <div class="kv"><div class="l">Current NIM</div><div class="v">${nim==null?'—':nim.toFixed(2)+'%'}</div></div>
+      <div class="kv"><div class="l">ΔNIM (modeled)</div><div class="v ${dNim==null?'':dNim<-60?'bad':dNim<-30?'warn':''}">${dNim==null?'—':(dNim>0?'+':'')+dNim.toFixed(0)+' bps'}</div></div>
+      <div class="kv"><div class="l">HTM / assets</div><div class="v ${htmPct!=null&&htmPct>20?'bad':htmPct!=null&&htmPct>10?'warn':''}">${htmPct==null?'—':htmPct.toFixed(1)+'%'}</div></div>
+      <div class="kv"><div class="l">Loans / deposits</div><div class="v">${ldr==null?'—':ldr.toFixed(1)+'%'}</div></div>
+      <div class="kv"><div class="l">Noncore funding</div><div class="v ${nc!=null&&nc>25?'warn':''}">${nc==null?'—':nc.toFixed(1)+'%'}</div></div>
+      <div class="kv"><div class="l">Total assets</div><div class="v">${asset==null?'—':'$'+fmtM(asset)}</div></div>
+    </div>
+
+    <div class="section-lbl">NIM · 8 quarters</div>
+    <canvas id="nimChart" height="160"></canvas>
+
+    <div class="section-lbl">ΔNIM curve · ±400 bps</div>
+    <canvas id="curveChart" height="140"></canvas>
+
+    <div class="section-lbl">Supervisory read</div>
+    <div class="reasons"><ul>${reasons.map(r=>`<li class="${r.kind}">${r.txt}</li>`).join('')}</ul></div>
+  `;
+
+  new Chart(document.getElementById('nimChart'),{type:'line',data:{labels:PANEL.quarters,datasets:[
+    {label:'NIM (%)',data:b.NIMQY1||[],borderColor:'#fbbf24',backgroundColor:'rgba(251,191,36,.08)',borderWidth:2,pointRadius:3,tension:.25,fill:true}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(120,148,210,.06)'}},y:{grid:{color:'rgba(120,148,210,.06)'},ticks:{callback:v=>v+'%'}}}}});
+
+  const curveLabels=[]; const curveData=[];
+  for(let s=-400;s<=400;s+=50){
+    curveLabels.push((s>0?'+':'')+s);
+    // recompute with this shock
+    const dr=s/10000; const beta=+document.getElementById('beta').value/100; const repr=+document.getElementById('reprice').value/100;
+    const depAsset = asset>0?(dep||0)/asset:0; const htmShare=asset>0?(htm||0)/asset:0;
+    const d = dr*(repr-beta*depAsset) + (dr>0?-dr*htmShare*0.2:0);
+    curveData.push(d*10000);
+  }
+  new Chart(document.getElementById('curveChart'),{type:'line',data:{labels:curveLabels,datasets:[
+    {label:'ΔNIM (bps)',data:curveData,borderColor:'#fb7185',backgroundColor:'rgba(251,113,133,.1)',borderWidth:2,pointRadius:2,tension:.2,fill:true}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(120,148,210,.06)'}},y:{grid:{color:'rgba(120,148,210,.06)'}}}}});
+}
+
+function recompute(){
+  const bps=+document.getElementById('shock').value;
+  document.getElementById('shockV').textContent=(bps>0?'+':'')+bps;
+  document.getElementById('betaV').textContent=document.getElementById('beta').value+'%';
+  document.getElementById('repriceV').textContent=document.getElementById('reprice').value+'%';
+  const qIdx=+document.getElementById('qtr').value;
+  const recs=getRecs(qIdx);
+  const filtered=applyFilters(recs);
+  renderHeader(filtered);
+  renderTable(filtered);
+}
+
+function num(v){if(v==null||isNaN(v))return '—';return Number(v).toLocaleString(undefined,{maximumFractionDigits:0})}
+function fmtM(v){if(v>=1e6)return (v/1e6).toFixed(2)+'B';return (v/1000).toFixed(1)+'M'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+['qtr','state'].forEach(id=>document.getElementById(id).addEventListener('change',recompute));
+['minAsset','shock','beta','reprice'].forEach(id=>document.getElementById(id).addEventListener('input',recompute));
+document.getElementById('searchBank').addEventListener('input',recompute);
+document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>{
+  const k=th.dataset.sort;
+  if(sortKey===k) sortDir=(sortDir==='desc'?'asc':'desc'); else {sortKey=k;sortDir=(k==='dNim'?'asc':'desc')}
+  recompute();
+}));
+
+loadData().catch(e=>{
+  document.getElementById('errBox').innerHTML=`<div class="err"><b>Could not load data.</b><br>Serve over HTTP: <code>python3 -m http.server 8765</code>.<br>Error: ${e.message}</div>`;
+});
+</script>
+<script src="theme.js"></script>
+</body>
+</html>
