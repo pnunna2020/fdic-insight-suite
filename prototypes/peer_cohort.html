@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Peer Cohort Builder · FDIC Insight Suite</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg-0:#05070f;--surface:rgba(20,28,52,.62);--surface-3:rgba(11,16,34,.85);
+    --border:rgba(120,148,210,.16);--border-strong:rgba(140,170,230,.32);
+    --text:#e8edf7;--text-dim:#a4b0cf;--muted:#6f7d9e;
+    --accent:#5cc8ff;--accent-2:#9d7cff;--gold:#f0c674;
+    --emerald:#34d399;--amber:#fbbf24;--coral:#fb7185;--crimson:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg-0);color:var(--text);font-family:'Inter',sans-serif;font-size:13.5px;line-height:1.5;overflow:hidden;-webkit-font-smoothing:antialiased}
+  .bg-mesh{position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(ellipse 60% 50% at 0% 0%,rgba(157,124,255,.10),transparent 60%),
+      radial-gradient(ellipse 60% 40% at 100% 100%,rgba(34,211,238,.08),transparent 60%),
+      var(--bg-0);}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);height:62px;background:linear-gradient(180deg,rgba(8,12,28,.85),rgba(8,12,28,.55));backdrop-filter:blur(14px)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:28px;height:28px;border-radius:7px;background:conic-gradient(from 220deg,var(--accent),var(--accent-2),var(--gold),var(--accent));box-shadow:0 0 16px rgba(92,200,255,.35),inset 0 0 0 1px rgba(255,255,255,.1);position:relative}
+  .brand-mark::after{content:'';position:absolute;inset:4px;border-radius:4px;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.25),transparent 60%),var(--bg-0)}
+  .brand-text{display:flex;flex-direction:column;line-height:1.1}
+  .brand-text .nm{font-weight:700;font-size:13px;letter-spacing:-.01em}
+  .brand-text .sub{font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+  .topbar a.back{color:var(--text-dim);text-decoration:none;font-size:12.5px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace;transition:.2s}
+  .topbar a.back:hover{color:var(--accent);border-color:var(--border-strong)}
+  .topbar-right{display:flex;align-items:center;gap:18px;font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .topbar-right .badge-app{padding:3px 10px;border-radius:5px;background:rgba(157,124,255,.1);color:var(--accent-2);border:1px solid rgba(157,124,255,.3);font-weight:600}
+
+  .container{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 62px)}
+  aside{border-right:1px solid var(--border);background:var(--surface-3);overflow-y:auto;padding:20px 20px}
+  aside h2{font-size:10.5px;text-transform:uppercase;color:var(--muted);letter-spacing:.14em;margin:0 0 8px;font-weight:600}
+  aside .group{margin-bottom:18px}
+  aside input[type=text],aside select{width:100%;background:rgba(5,7,15,.65);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:7px;font-size:12.5px;outline:0;font-family:inherit;transition:.2s}
+  aside input:focus,aside select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(92,200,255,.12)}
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .slider-row{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--muted)}
+  .slider-row input[type=range]{flex:1;accent-color:var(--accent-2)}
+  .slider-row .v{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent-2);min-width:60px;text-align:right;font-variant-numeric:tabular-nums}
+  .chk{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:var(--text-dim);cursor:pointer}
+  .chk input{accent-color:var(--accent-2)}
+
+  .suggest-wrap{position:relative}
+  .suggest{position:absolute;z-index:5;left:0;right:0;top:calc(100% + 4px);background:var(--surface-3);border:1px solid var(--border-strong);border-radius:8px;max-height:280px;overflow:auto;display:none;backdrop-filter:blur(16px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
+  .suggest .s{padding:8px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid rgba(120,148,210,.06)}
+  .suggest .s:hover{background:rgba(92,200,255,.08)}
+  .suggest .s .meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted);margin-top:2px}
+
+  .picked{background:rgba(157,124,255,.08);border:1px solid rgba(157,124,255,.25);border-radius:8px;padding:10px 12px;font-size:12.5px;margin-top:4px}
+  .picked .nm{font-weight:600;margin-bottom:2px}
+  .picked .mt{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted)}
+  .picked .clr{float:right;color:var(--muted);cursor:pointer;text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:11px}
+  .picked .clr:hover{color:var(--coral)}
+
+  .help{font-size:11px;color:var(--muted);line-height:1.55;padding:12px;background:rgba(15,21,43,.55);border-radius:8px;border:1px solid var(--border);margin-top:6px}
+  .help b{color:var(--text-dim);font-weight:500}
+
+  main{overflow-y:auto;padding:22px 28px}
+  .stat-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  .stat{background:var(--surface);border:1px solid var(--border);padding:14px 16px;border-radius:12px;backdrop-filter:blur(12px);position:relative;overflow:hidden}
+  .stat .l{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;font-weight:600}
+  .stat .v{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:600;margin-top:6px;letter-spacing:-.02em;background:linear-gradient(180deg,#fff,#a8b8d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .d{font-size:11px;color:var(--muted);margin-top:4px;font-family:'JetBrains Mono',monospace}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 22px;margin-bottom:16px;backdrop-filter:blur(12px)}
+  .panel h3{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--text-dim);font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+  .panel h3 .hint{font-size:10px;color:var(--muted);letter-spacing:.08em;font-weight:500}
+
+  .metric-row{display:grid;grid-template-columns:180px 1fr 80px 80px;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(120,148,210,.07);font-size:12.5px}
+  .metric-row:last-of-type{border-bottom:0}
+  .metric-row .ml{color:var(--text-dim);font-weight:500}
+  .metric-row .ml small{display:block;color:var(--muted);font-weight:400;font-size:10.5px;margin-top:2px}
+  .metric-row .mv{text-align:right;font-family:'JetBrains Mono',monospace;font-weight:600;font-variant-numeric:tabular-nums}
+  .metric-row .mp{text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600}
+
+  /* Distribution bar */
+  .dist{position:relative;height:28px;background:rgba(120,148,210,.06);border-radius:14px;overflow:hidden}
+  .dist .box{position:absolute;top:6px;bottom:6px;background:rgba(92,200,255,.18);border:1px solid rgba(92,200,255,.4);border-radius:2px}
+  .dist .median{position:absolute;top:2px;bottom:2px;width:2px;background:rgba(120,148,210,.4)}
+  .dist .marker{position:absolute;top:-2px;bottom:-2px;width:12px;margin-left:-6px;display:flex;align-items:center;justify-content:center}
+  .dist .marker::after{content:'';width:12px;height:12px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 2px var(--bg-0),0 0 8px rgba(240,198,116,.5)}
+  .dist .labels{position:absolute;inset:0;display:flex;justify-content:space-between;padding:0 6px;align-items:center;pointer-events:none;font-size:9.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+
+  .pct-good{color:#86efac}
+  .pct-warn{color:#fde68a}
+  .pct-bad{color:#fca5a5}
+
+  .tbl-scroll{overflow:auto;max-height:calc(100vh - 360px)}
+  table{width:100%;border-collapse:collapse}
+  thead{position:sticky;top:0;z-index:1}
+  th{font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:.1em;text-align:left;padding:10px 10px;font-weight:600;background:rgba(11,16,34,.95);border-bottom:1px solid var(--border);cursor:pointer}
+  th.num{text-align:right}
+  td{padding:7px 10px;border-bottom:1px solid rgba(120,148,210,.06);font-size:12.5px;color:var(--text)}
+  td.num{text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+  tr.target td{background:rgba(240,198,116,.08);box-shadow:inset 3px 0 0 var(--gold)}
+
+  .err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);color:#fca5a5;padding:14px 18px;border-radius:10px;margin-bottom:14px;font-size:13px}
+  .err code{background:rgba(5,7,15,.5);border:1px solid var(--border);padding:2px 7px;border-radius:4px;font-size:12px;font-family:'JetBrains Mono',monospace}
+
+  .empty{text-align:center;color:var(--muted);padding:60px 30px;font-size:13px;line-height:1.6}
+  .empty .icon{font-size:36px;opacity:.3;margin-bottom:14px}
+
+  aside::-webkit-scrollbar,main::-webkit-scrollbar,.tbl-scroll::-webkit-scrollbar{width:8px;height:8px}
+  aside::-webkit-scrollbar-thumb,main::-webkit-scrollbar-thumb,.tbl-scroll::-webkit-scrollbar-thumb{background:rgba(140,170,230,.18);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div class="brand-text">
+      <div class="nm">FDIC Insight Suite</div>
+      <div class="sub">Peer Cohort Builder · App #7</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge-app">COMPARE</span>
+    <span id="meta">Loading…</span>
+    <a class="back" href="index.html">← Suite</a>
+  </div>
+</div>
+
+<div class="container">
+  <aside>
+    <div class="group">
+      <h2>Target bank</h2>
+      <div class="suggest-wrap">
+        <input id="tq" type="text" placeholder="Search by name or CERT…" autocomplete="off">
+        <div id="sug" class="suggest"></div>
+      </div>
+      <div id="pickBox"></div>
+    </div>
+
+    <div class="group">
+      <h2>As-of quarter</h2>
+      <select id="qtr"></select>
+    </div>
+
+    <div class="group">
+      <h2>Asset range ($M)</h2>
+      <div class="row-2">
+        <input id="amin" type="text" placeholder="min" />
+        <input id="amax" type="text" placeholder="max" />
+      </div>
+      <small style="font-size:10.5px;color:var(--muted);display:block;margin-top:4px">Leave blank to auto-size to target ±50%.</small>
+    </div>
+
+    <div class="group">
+      <h2>Region</h2>
+      <select id="region">
+        <option value="">All regions</option>
+        <option value="same_state">Same state as target</option>
+        <option value="same_fed">Same FDIC region</option>
+        <option value="ne">Northeast</option>
+        <option value="se">Southeast</option>
+        <option value="mw">Midwest</option>
+        <option value="sw">Southwest</option>
+        <option value="w">West</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <h2>Charter class</h2>
+      <label class="chk"><input type="checkbox" class="bc" value="N" checked> N — National</label>
+      <label class="chk"><input type="checkbox" class="bc" value="NM" checked> NM — State, non-member</label>
+      <label class="chk"><input type="checkbox" class="bc" value="SM" checked> SM — State member</label>
+      <label class="chk"><input type="checkbox" class="bc" value="SB" checked> SB — Savings bank</label>
+      <label class="chk"><input type="checkbox" class="bc" value="SL" checked> SL — Savings &amp; Loan</label>
+    </div>
+
+    <div class="group">
+      <h2>Specialization</h2>
+      <select id="spec">
+        <option value="">Any specialization</option>
+        <option value="match">Match target's specialization</option>
+      </select>
+    </div>
+
+    <div class="help">
+      <b>How it works:</b> define a peer cohort by size, geography, charter and specialization. The target bank's percentile rank is computed <i>within this cohort</i> (not the full universe) on every ratio.
+    </div>
+  </aside>
+
+  <main>
+    <div id="errBox"></div>
+    <div id="body">
+      <div class="empty">
+        <div class="icon">◴</div>
+        Pick a target bank in the left panel to build its peer cohort.<br>
+        Try <b>TrustCo</b>, <b>Interaudi</b>, <b>First Republic</b>, or any CERT number.
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+let PANEL=null, TARGET=null, SUGG=[], suggIdx=-1;
+let CHART_DEFAULTS_SET=false;
+
+const METRICS = [
+  {key:'ROAQ',      label:'Return on assets',     sub:'ROA · quarter', unit:'%', fmt:v=>v.toFixed(2),   higherIsBetter:true},
+  {key:'ROE',       label:'Return on equity',     sub:'ROE · quarter', unit:'%', fmt:v=>v.toFixed(2),   higherIsBetter:true},
+  {key:'NIMQY1',    label:'Net interest margin',  sub:'NIM',           unit:'%', fmt:v=>v.toFixed(2),   higherIsBetter:true},
+  {key:'EEFFR',     label:'Efficiency ratio',     sub:'lower = better',unit:'%', fmt:v=>v.toFixed(1),   higherIsBetter:false},
+  {key:'EQV',       label:'Equity / assets',      sub:'capital buffer',unit:'%', fmt:v=>v.toFixed(2),   higherIsBetter:true},
+  {key:'RBCRWAJ',   label:'Total RBC ratio',      sub:'risk-based cap',unit:'%', fmt:v=>v.toFixed(1),   higherIsBetter:true},
+  {key:'LNLSDEPR',  label:'Loans / deposits',     sub:'liquidity',     unit:'%', fmt:v=>v.toFixed(1),   higherIsBetter:false},
+  {key:'NPERFV',    label:'Noncurrent + OREO',    sub:'asset quality', unit:'%', fmt:v=>v.toFixed(2),   higherIsBetter:false},
+  {key:'NCOREQ1',   label:'Noncore funding',      sub:'stability',     unit:'%', fmt:v=>v.toFixed(1),   higherIsBetter:false},
+  {key:'LNRERT1R',  label:'CRE / Tier 1',         sub:'concentration', unit:'%', fmt:v=>v.toFixed(0),   higherIsBetter:false},
+];
+
+const REGIONS = {
+  ne:['CT','ME','MA','NH','RI','VT','NJ','NY','PA','DC','DE','MD'],
+  se:['AL','FL','GA','KY','MS','NC','SC','TN','VA','WV','AR','LA','PR','VI'],
+  mw:['IA','IL','IN','KS','MI','MN','MO','NE','ND','OH','SD','WI'],
+  sw:['AZ','NM','OK','TX'],
+  w: ['AK','CA','CO','HI','ID','MT','NV','OR','UT','WA','WY'],
+};
+
+function setChartDefaults(){
+  if(CHART_DEFAULTS_SET) return;
+  Chart.defaults.color='#a4b0cf';
+  Chart.defaults.font.family="'Inter',sans-serif";
+  Chart.defaults.font.size=10.5;
+  CHART_DEFAULTS_SET=true;
+}
+
+async function loadData(){
+  setChartDefaults();
+  PANEL = await fetch('./data/liquidity_panel.json').then(r=>r.json());
+  const q = document.getElementById('qtr');
+  PANEL.quarters.forEach((qq,i)=>q.innerHTML += `<option value="${i}" ${i===PANEL.quarters.length-1?'selected':''}>${qq}</option>`);
+  SUGG = [];
+  for(const cert in PANEL.banks){
+    const b = PANEL.banks[cert];
+    const m = b._meta||{};
+    SUGG.push({cert, name:m.name||'', state:m.state||'', cls:m.class||'', active:m.active==='1'});
+  }
+  document.getElementById('meta').textContent =
+    `${Object.keys(PANEL.banks).length.toLocaleString()} banks · ${PANEL.quarters.length} quarters · ${METRICS.length} metrics`;
+
+  // Deep-link
+  const u = new URLSearchParams(location.search);
+  if(u.get('cert') && PANEL.banks[u.get('cert')]) pick(u.get('cert'));
+}
+
+function search(q){
+  q = q.trim().toLowerCase(); if(!q) return [];
+  const isNum = /^\d+$/.test(q);
+  const scored=[];
+  for(const r of SUGG){
+    let score=0; const n=r.name.toLowerCase();
+    if(isNum){ if(r.cert===q) score=1000; else if(r.cert.startsWith(q)) score=100; else continue; }
+    else { if(n.startsWith(q)) score=100; else if(n.includes(q)) score=50; else continue; }
+    if(r.active) score+=5;
+    scored.push({...r,score});
+  }
+  scored.sort((a,b)=>b.score-a.score);
+  return scored.slice(0,10);
+}
+
+function renderSuggest(items){
+  const el = document.getElementById('sug');
+  if(!items.length){el.style.display='none';return;}
+  el.style.display='block';
+  el.innerHTML = items.map((r,i)=>`
+    <div class="s ${i===suggIdx?'active':''}" data-cert="${r.cert}">
+      <div>${esc(r.name)}</div>
+      <div class="meta">CERT ${r.cert} · ${r.state} · ${r.cls}${r.active?'':' · inactive'}</div>
+    </div>`).join('');
+  el.querySelectorAll('.s').forEach(s=>s.addEventListener('click',()=>{pick(s.dataset.cert);}));
+}
+
+function pick(cert){
+  const b = PANEL.banks[cert]; if(!b) return;
+  const m = b._meta||{};
+  TARGET = {cert, ...m};
+  document.getElementById('tq').value='';
+  document.getElementById('sug').style.display='none';
+  const box = document.getElementById('pickBox');
+  box.innerHTML = `
+    <div class="picked">
+      <a class="clr" href="#" onclick="clearPick();return false">clear</a>
+      <div class="nm">${esc(m.name||'')}</div>
+      <div class="mt">CERT ${cert} · ${m.state||''} · ${m.class||''}</div>
+    </div>`;
+  recompute();
+  history.replaceState(null,'',`?cert=${cert}`);
+}
+
+function clearPick(){
+  TARGET=null;
+  document.getElementById('pickBox').innerHTML='';
+  document.getElementById('body').innerHTML = `<div class="empty"><div class="icon">◴</div>Pick a target bank to build its peer cohort.</div>`;
+  history.replaceState(null,'','');
+}
+
+function parseNum(v){ v=(v||'').toString().replace(/,/g,'').trim(); if(!v) return null; const n=parseFloat(v); return isNaN(n)?null:n; }
+
+function buildCohort(){
+  const qIdx = +document.getElementById('qtr').value;
+  if(!TARGET) return null;
+  const t = PANEL.banks[TARGET.cert];
+  const tAsset = (t.ASSET||[])[qIdx];
+  const aminI = parseNum(document.getElementById('amin').value);
+  const amaxI = parseNum(document.getElementById('amax').value);
+  // Auto-size if blank: ±50% of target asset (in $M input, data is in $000 so *1000)
+  const amin = (aminI!=null?aminI:(tAsset?tAsset*0.5/1000:0)) * 1000;
+  const amax = (amaxI!=null?amaxI:(tAsset?tAsset*1.5/1000:1e15)) * 1000;
+
+  const region = document.getElementById('region').value;
+  const classes = [...document.querySelectorAll('.bc:checked')].map(c=>c.value);
+  const spec = document.getElementById('spec').value;
+  const tSpec = (t._meta?.specgrp)||''; // we don't have specgrpn in panel; use null
+
+  const cohort = [];
+  for(const cert in PANEL.banks){
+    const b = PANEL.banks[cert];
+    const m = b._meta||{};
+    if(m.active!=='1') continue;
+    if(cert===TARGET.cert) continue;
+    const a = (b.ASSET||[])[qIdx]; if(a==null || a<amin || a>amax) continue;
+    if(classes.length && !classes.includes(m.class)) continue;
+    if(region==='same_state' && m.state!==TARGET.state) continue;
+    if(['ne','se','mw','sw','w'].includes(region) && !REGIONS[region].includes(m.state)) continue;
+    // FDIC region placeholder — we don't have fdicregn in _meta; skip if selected
+    cohort.push({cert, name:m.name, state:m.state, cls:m.class, b});
+  }
+  return {cohort, qIdx, target:t, tAsset};
+}
+
+function percentile(sorted, v){
+  let lo=0, hi=sorted.length;
+  while(lo<hi){const mid=(lo+hi)>>1; if(sorted[mid]<v) lo=mid+1; else hi=mid;}
+  return sorted.length? (lo/sorted.length)*100 : null;
+}
+
+function pctClass(p, higherIsBetter){
+  if(p==null) return '';
+  const g = higherIsBetter ? p>=60 : p<=40;
+  const b = higherIsBetter ? p<=25 : p>=75;
+  if(g) return 'pct-good';
+  if(b) return 'pct-bad';
+  return 'pct-warn';
+}
+
+function recompute(){
+  if(!TARGET) return;
+  const r = buildCohort(); if(!r) return;
+  const {cohort, qIdx, target, tAsset} = r;
+
+  const N = cohort.length;
+  if(N<3){
+    document.getElementById('body').innerHTML = `
+      <div class="empty"><div class="icon">⚠</div>Peer cohort has only ${N} bank(s) — loosen the filters (expand asset range, enable more charter classes, drop region).</div>`;
+    return;
+  }
+
+  // Summary cards
+  const headerHtml = `
+    <div class="stat-bar">
+      <div class="stat"><div class="l">Peer cohort size</div><div class="v">${N.toLocaleString()}</div><div class="d">banks matching criteria</div></div>
+      <div class="stat"><div class="l">Target asset size</div><div class="v">$${fmtM(tAsset)}</div><div class="d">${PANEL.quarters[qIdx]}</div></div>
+      <div class="stat"><div class="l">Cohort median asset</div><div class="v">$${fmtM(median(cohort.map(c=>(c.b.ASSET||[])[qIdx])))}</div><div class="d">&nbsp;</div></div>
+      <div class="stat"><div class="l">Metrics evaluated</div><div class="v">${METRICS.length}</div><div class="d">from semantic layer</div></div>
+    </div>`;
+
+  // Build per-metric percentile rows
+  const rows = [];
+  const rankBars = [];
+  for(const mv of METRICS){
+    const peerVals = cohort.map(c=>(c.b[mv.key]||[])[qIdx]).filter(x=>x!=null && !isNaN(x));
+    peerVals.sort((a,b)=>a-b);
+    const tVal = (target[mv.key]||[])[qIdx];
+    let pct=null, q1=null, q3=null, med=null;
+    if(peerVals.length>2){
+      q1 = peerVals[Math.floor(peerVals.length*0.25)];
+      med = peerVals[Math.floor(peerVals.length*0.5)];
+      q3 = peerVals[Math.floor(peerVals.length*0.75)];
+      if(tVal!=null) pct = percentile(peerVals, tVal);
+    }
+    const displayPct = (pct!=null && !mv.higherIsBetter) ? (100-pct) : pct; // so higher % label = better
+    rows.push({mv, tVal, pct, displayPct, q1, q3, med, peerVals});
+  }
+
+  const metricRowsHtml = rows.map(r=>{
+    const tv = r.tVal==null ? '—' : r.mv.fmt(r.tVal)+r.mv.unit;
+    const ptxt = r.pct==null ? '—' : (r.displayPct.toFixed(0)+' pct');
+    const cls = pctClass(r.displayPct, true);
+    // Distribution bar
+    let distHtml = `<div class="dist"></div>`;
+    if(r.peerVals.length>2){
+      const lo = r.peerVals[0], hi = r.peerVals[r.peerVals.length-1];
+      const span = hi-lo || 1;
+      const q1p = ((r.q1-lo)/span)*100;
+      const q3p = ((r.q3-lo)/span)*100;
+      const medp = ((r.med-lo)/span)*100;
+      const tp = (r.tVal!=null) ? Math.max(0,Math.min(100,((r.tVal-lo)/span)*100)) : null;
+      distHtml = `
+        <div class="dist">
+          <div class="box" style="left:${q1p}%;right:${100-q3p}%"></div>
+          <div class="median" style="left:${medp}%"></div>
+          ${tp!=null?`<div class="marker" style="left:${tp}%" title="Target: ${r.mv.fmt(r.tVal)}${r.mv.unit}"></div>`:''}
+          <div class="labels"><span>${r.mv.fmt(lo)}</span><span>p50 ${r.mv.fmt(r.med)}</span><span>${r.mv.fmt(hi)}</span></div>
+        </div>`;
+    }
+    return `<div class="metric-row">
+      <div class="ml">${r.mv.label}<small>${r.mv.sub}</small></div>
+      ${distHtml}
+      <div class="mv">${tv}</div>
+      <div class="mp ${cls}">${ptxt}</div>
+    </div>`;
+  }).join('');
+
+  // Comparison table
+  // Rank target + top/bottom 5 peers by cohort asset
+  cohort.sort((a,b)=>((b.b.ASSET||[])[qIdx]||0)-((a.b.ASSET||[])[qIdx]||0));
+  const showRows = [{cert:TARGET.cert,name:target._meta.name,state:target._meta.state,cls:target._meta.class,b:target,isTarget:true}]
+                    .concat(cohort.slice(0,15));
+
+  const tableHtml = `
+    <div class="panel">
+      <h3>Cohort members <span class="hint">target + top 15 by asset size</span></h3>
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr>
+            <th>Bank</th><th>State</th><th>Cls</th>
+            <th class="num">Assets ($M)</th>
+            <th class="num">ROA (%)</th><th class="num">NIM (%)</th>
+            <th class="num">Eff (%)</th><th class="num">EqAs (%)</th>
+            <th class="num">L/D (%)</th><th class="num">NPL (%)</th>
+            <th class="num">CRE/T1 (%)</th>
+          </tr></thead>
+          <tbody>
+          ${showRows.map(r=>`
+            <tr class="${r.isTarget?'target':''}">
+              <td>${esc(r.name||'')}</td>
+              <td>${r.state||''}</td>
+              <td>${r.cls||''}</td>
+              <td class="num">${num((r.b.ASSET||[])[qIdx]/1000)}</td>
+              <td class="num">${fmt2((r.b.ROAQ||[])[qIdx])}</td>
+              <td class="num">${fmt2((r.b.NIMQY1||[])[qIdx])}</td>
+              <td class="num">${fmt1((r.b.EEFFR||[])[qIdx])}</td>
+              <td class="num">${fmt2((r.b.EQV||[])[qIdx])}</td>
+              <td class="num">${fmt1((r.b.LNLSDEPR||[])[qIdx])}</td>
+              <td class="num">${fmt2((r.b.NPERFV||[])[qIdx])}</td>
+              <td class="num">${fmt0((r.b.LNRERT1R||[])[qIdx])}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+
+  document.getElementById('body').innerHTML = headerHtml + `
+    <div class="panel">
+      <h3>Target vs peer cohort · percentile marker on peer distribution <span class="hint">${PANEL.quarters[qIdx]}</span></h3>
+      ${metricRowsHtml}
+    </div>` + tableHtml;
+}
+
+function median(arr){arr=arr.filter(x=>x!=null); arr.sort((a,b)=>a-b); return arr.length?arr[Math.floor(arr.length/2)]:null}
+function num(v){if(v==null||isNaN(v))return '—';return Number(v).toLocaleString(undefined,{maximumFractionDigits:0})}
+function fmt0(v){if(v==null||isNaN(v))return '—';return v.toFixed(0)}
+function fmt1(v){if(v==null||isNaN(v))return '—';return v.toFixed(1)}
+function fmt2(v){if(v==null||isNaN(v))return '—';return v.toFixed(2)}
+function fmtM(v){if(v==null)return '—';if(v>=1e6) return (v/1e6).toFixed(2)+'B'; if(v>=1e3) return (v/1e3).toFixed(1)+'M'; return (v||0).toFixed(0)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+window.clearPick = clearPick;
+
+const inp = document.getElementById('tq');
+inp.addEventListener('input',e=>{suggIdx=-1; renderSuggest(search(e.target.value));});
+inp.addEventListener('keydown',e=>{
+  const items = search(inp.value);
+  if(!items.length) return;
+  if(e.key==='ArrowDown'){ suggIdx=Math.min(items.length-1,suggIdx+1); renderSuggest(items); e.preventDefault(); }
+  else if(e.key==='ArrowUp'){ suggIdx=Math.max(-1,suggIdx-1); renderSuggest(items); e.preventDefault(); }
+  else if(e.key==='Enter'){ const pickr=items[Math.max(0,suggIdx)]; if(pickr){pick(pickr.cert); e.preventDefault();} }
+});
+document.addEventListener('click',e=>{ if(!e.target.closest('.suggest-wrap')) document.getElementById('sug').style.display='none'; });
+
+['qtr','amin','amax','region','spec'].forEach(id=>document.getElementById(id).addEventListener('input',recompute));
+document.querySelectorAll('.bc').forEach(c=>c.addEventListener('change',recompute));
+
+loadData().catch(e=>{
+  document.getElementById('errBox').innerHTML =
+    `<div class="err"><b>Could not load data.</b> Serve over HTTP: <code>python3 -m http.server 8765</code>. Error: ${e.message}</div>`;
+});
+</script>
+</body>
+</html>

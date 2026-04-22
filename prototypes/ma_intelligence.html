@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>M&amp;A Intelligence · FDIC Insight Suite</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg-0:#05070f;--surface:rgba(20,28,52,.62);--surface-3:rgba(11,16,34,.85);
+    --border:rgba(120,148,210,.16);--border-strong:rgba(140,170,230,.32);
+    --text:#e8edf7;--text-dim:#a4b0cf;--muted:#6f7d9e;
+    --accent:#5cc8ff;--accent-2:#9d7cff;--gold:#f0c674;
+    --emerald:#34d399;--amber:#fbbf24;--coral:#fb7185;--crimson:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg-0);color:var(--text);font-family:'Inter',sans-serif;font-size:13.5px;line-height:1.5;overflow:hidden;-webkit-font-smoothing:antialiased}
+  .bg-mesh{position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(ellipse 60% 50% at 0% 0%,rgba(34,211,238,.08),transparent 60%),
+      radial-gradient(ellipse 60% 40% at 100% 100%,rgba(251,113,133,.08),transparent 60%),
+      var(--bg-0);}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);height:62px;background:linear-gradient(180deg,rgba(8,12,28,.85),rgba(8,12,28,.55));backdrop-filter:blur(14px)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:28px;height:28px;border-radius:7px;background:conic-gradient(from 220deg,var(--accent),var(--accent-2),var(--gold),var(--accent));box-shadow:0 0 16px rgba(92,200,255,.35),inset 0 0 0 1px rgba(255,255,255,.1);position:relative}
+  .brand-mark::after{content:'';position:absolute;inset:4px;border-radius:4px;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.25),transparent 60%),var(--bg-0)}
+  .brand-text{display:flex;flex-direction:column;line-height:1.1}
+  .brand-text .nm{font-weight:700;font-size:13px;letter-spacing:-.01em}
+  .brand-text .sub{font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+  .topbar a.back{color:var(--text-dim);text-decoration:none;font-size:12.5px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace;transition:.2s}
+  .topbar a.back:hover{color:var(--accent);border-color:var(--border-strong)}
+  .topbar-right{display:flex;align-items:center;gap:18px;font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .topbar-right .badge-app{padding:3px 10px;border-radius:5px;background:rgba(34,211,238,.1);color:#67e8f9;border:1px solid rgba(34,211,238,.3);font-weight:600}
+
+  .container{display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 62px)}
+  aside{border-right:1px solid var(--border);background:var(--surface-3);overflow-y:auto;padding:20px 18px}
+  aside h2{font-size:10.5px;text-transform:uppercase;color:var(--muted);letter-spacing:.14em;margin:0 0 8px;font-weight:600}
+  aside .group{margin-bottom:18px}
+  aside select,aside input[type=text]{width:100%;background:rgba(5,7,15,.65);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:7px;font-size:12.5px;outline:0;font-family:inherit;transition:.2s}
+  aside select:focus,aside input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(92,200,255,.12)}
+  .slider-row{display:flex;align-items:center;gap:10px}
+  .slider-row input[type=range]{flex:1;accent-color:var(--gold)}
+  .slider-row .v{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--gold);min-width:60px;text-align:right;font-variant-numeric:tabular-nums}
+
+  .weight-row{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+  .weight-row .lbl{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--text-dim)}
+  .weight-row .lbl b{color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px}
+
+  .help{font-size:11px;color:var(--muted);line-height:1.55;padding:12px;background:rgba(15,21,43,.55);border-radius:8px;border:1px solid var(--border);margin-top:6px}
+  .help b{color:var(--text-dim);font-weight:500}
+
+  main{overflow-y:auto;padding:20px 24px}
+  .stat-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  .stat{background:var(--surface);border:1px solid var(--border);padding:14px 16px;border-radius:12px;backdrop-filter:blur(12px);position:relative;overflow:hidden}
+  .stat .l{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;font-weight:600}
+  .stat .v{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:600;margin-top:6px;letter-spacing:-.02em;background:linear-gradient(180deg,#fff,#a8b8d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .v.t{background:linear-gradient(180deg,#fda4af,#ef4444);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .v.a{background:linear-gradient(180deg,#86efac,#34d399);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .d{font-size:11px;color:var(--muted);margin-top:4px;font-family:'JetBrains Mono',monospace}
+
+  .dual{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0;backdrop-filter:blur(12px);overflow:hidden}
+  .panel-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .panel-head h3{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.14em;font-weight:600}
+  .panel-head.tgt h3{color:#fca5a5}
+  .panel-head.acq h3{color:#86efac}
+  .panel-head .hint{font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.06em}
+
+  .tbl-scroll{overflow:auto;max-height:calc(50vh - 160px)}
+  table{width:100%;border-collapse:collapse}
+  thead{position:sticky;top:0;z-index:1}
+  th{font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:.1em;text-align:left;padding:10px 10px;font-weight:600;background:rgba(11,16,34,.95);border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+  th.num{text-align:right}
+  th:hover{color:var(--accent)}
+  td{padding:7px 10px;border-bottom:1px solid rgba(120,148,210,.06);font-size:12.5px;color:var(--text)}
+  td.num{text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+  td.bank{font-weight:500}
+  tr{cursor:pointer;transition:background .15s}
+  tr:hover td{background:rgba(92,200,255,.04)}
+
+  .score{display:inline-flex;align-items:center;justify-content:center;min-width:46px;padding:3px 10px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+  .s-0{background:rgba(120,148,210,.08);color:var(--text-dim)}
+  .s-1{background:rgba(52,211,153,.14);color:#86efac}
+  .s-2{background:rgba(163,230,53,.14);color:#bef264}
+  .s-3{background:rgba(251,191,36,.18);color:#fde68a}
+  .s-4{background:rgba(251,146,60,.20);color:#fed7aa}
+  .s-5{background:rgba(239,68,68,.24);color:#fca5a5;box-shadow:0 0 8px rgba(239,68,68,.15)}
+
+  .matches-panel{margin-top:8px}
+  .matches{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px 18px}
+  .match{background:rgba(11,16,34,.6);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:5px;font-size:12px}
+  .match .arrow{font-size:15px;color:var(--gold);text-align:center;margin:2px 0}
+  .match .a,.match .b{display:flex;justify-content:space-between;gap:8px}
+  .match .a .nm,.match .b .nm{font-weight:500;color:var(--text)}
+  .match .a .mt,.match .b .mt{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--muted)}
+  .match.acq-tint{border-left:3px solid #34d399}
+  .match.tgt-tint{border-right:3px solid #ef4444}
+
+  .err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);color:#fca5a5;padding:14px 18px;border-radius:10px;margin-bottom:14px;font-size:13px}
+  .err code{background:rgba(5,7,15,.5);border:1px solid var(--border);padding:2px 7px;border-radius:4px;font-size:12px;font-family:'JetBrains Mono',monospace}
+
+  aside::-webkit-scrollbar,main::-webkit-scrollbar,.tbl-scroll::-webkit-scrollbar{width:8px;height:8px}
+  aside::-webkit-scrollbar-thumb,main::-webkit-scrollbar-thumb,.tbl-scroll::-webkit-scrollbar-thumb{background:rgba(140,170,230,.18);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div class="brand-text">
+      <div class="nm">FDIC Insight Suite</div>
+      <div class="sub">M&amp;A Intelligence · App #14</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge-app">MARKET</span>
+    <span id="meta">Loading…</span>
+    <a class="back" href="index.html">← Suite</a>
+  </div>
+</div>
+
+<div class="container">
+  <aside>
+    <div class="group">
+      <h2>As-of quarter</h2>
+      <select id="qtr"></select>
+    </div>
+
+    <div class="group">
+      <h2>Min assets ($M)</h2>
+      <div class="slider-row">
+        <input id="minAsset" type="range" min="0" max="5000" value="100" step="50">
+        <div class="v" id="minAssetV">100</div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>Max assets ($M)</h2>
+      <div class="slider-row">
+        <input id="maxAsset" type="range" min="100" max="50000" value="10000" step="500">
+        <div class="v" id="maxAssetV">10,000</div>
+      </div>
+    </div>
+
+    <div class="group">
+      <h2>State filter</h2>
+      <select id="state"><option value="">All states</option></select>
+    </div>
+
+    <div class="group">
+      <h2>Target-side score weights</h2>
+      <div class="weight-row">
+        <div class="lbl"><span>ROA weakness</span><b id="wt_roaV">30</b></div>
+        <input id="wt_roa" type="range" min="0" max="60" value="30">
+      </div>
+      <div class="weight-row">
+        <div class="lbl"><span>Asset shrinkage</span><b id="wt_shrinkV">25</b></div>
+        <input id="wt_shrink" type="range" min="0" max="60" value="25">
+      </div>
+      <div class="weight-row">
+        <div class="lbl"><span>Efficiency stress</span><b id="wt_effV">20</b></div>
+        <input id="wt_eff" type="range" min="0" max="60" value="20">
+      </div>
+      <div class="weight-row">
+        <div class="lbl"><span>Asset-quality stress</span><b id="wt_nplV">15</b></div>
+        <input id="wt_npl" type="range" min="0" max="60" value="15">
+      </div>
+      <div class="weight-row">
+        <div class="lbl"><span>Small-scale penalty</span><b id="wt_sizeV">10</b></div>
+        <input id="wt_size" type="range" min="0" max="60" value="10">
+      </div>
+    </div>
+
+    <div class="help">
+      <b>Signals used:</b><br>
+      <b>Targets</b> — low/declining ROA, shrinking balance sheet, high efficiency ratio, rising NPL, subscale size (all percentile-ranked inside the universe).<br>
+      <b>Acquirers</b> — strong &amp; growing ROE, rising assets, high capital headroom (RBC), positive efficiency trend, size advantage.<br>
+      <i>Pairings</i> match acquirers with targets in the same state, by acquirer capacity (capital slack × target asset size).
+    </div>
+  </aside>
+
+  <main>
+    <div id="errBox"></div>
+    <div class="stat-bar">
+      <div class="stat"><div class="l">Universe size</div><div class="v" id="kBanks">—</div><div class="d" id="kBanksD">&nbsp;</div></div>
+      <div class="stat"><div class="l">High target score (≥70)</div><div class="v t" id="kTargets">—</div><div class="d">likely to be acquired</div></div>
+      <div class="stat"><div class="l">High acquirer score (≥70)</div><div class="v a" id="kAcqs">—</div><div class="d">likely to acquire</div></div>
+      <div class="stat"><div class="l">Same-state pair suggestions</div><div class="v" id="kPairs">—</div><div class="d">top ranked</div></div>
+    </div>
+
+    <div class="dual">
+      <div class="panel">
+        <div class="panel-head tgt">
+          <h3>▼ Likely targets · top 25</h3>
+          <span class="hint">weak fundamentals + subscale</span>
+        </div>
+        <div class="tbl-scroll">
+          <table id="tgtTbl">
+            <thead><tr>
+              <th data-sort="tscore" data-tbl="tgt">Score</th>
+              <th data-sort="name" data-tbl="tgt">Bank</th>
+              <th>State</th>
+              <th class="num" data-sort="asset" data-tbl="tgt">Assets ($M)</th>
+              <th class="num" data-sort="roa" data-tbl="tgt">ROA</th>
+              <th class="num" data-sort="assetDelta" data-tbl="tgt">Δ Asset</th>
+              <th class="num" data-sort="eeff" data-tbl="tgt">Eff.</th>
+              <th class="num" data-sort="npl" data-tbl="tgt">NPL</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head acq">
+          <h3>▲ Likely acquirers · top 25</h3>
+          <span class="hint">capital headroom + growth</span>
+        </div>
+        <div class="tbl-scroll">
+          <table id="acqTbl">
+            <thead><tr>
+              <th data-sort="ascore" data-tbl="acq">Score</th>
+              <th data-sort="name" data-tbl="acq">Bank</th>
+              <th>State</th>
+              <th class="num" data-sort="asset" data-tbl="acq">Assets ($M)</th>
+              <th class="num" data-sort="roe" data-tbl="acq">ROE</th>
+              <th class="num" data-sort="assetDelta" data-tbl="acq">Δ Asset</th>
+              <th class="num" data-sort="rbc" data-tbl="acq">RBC</th>
+              <th class="num" data-sort="capHead" data-tbl="acq">Cap slack</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel matches-panel">
+      <div class="panel-head">
+        <h3 style="color:var(--gold)">⟷ Suggested pairings · same-state matches</h3>
+        <span class="hint">acquirer capacity ≥ target asset size</span>
+      </div>
+      <div class="matches" id="pairBox"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+let PANEL=null, REC=null, sortKey={tgt:'tscore', acq:'ascore'}, sortDir={tgt:'desc', acq:'desc'};
+let CHART_DEFAULTS_SET=false;
+
+async function loadData(){
+  PANEL = await fetch('./data/liquidity_panel.json').then(r=>r.json());
+  const q = document.getElementById('qtr');
+  PANEL.quarters.forEach((qq,i)=>q.innerHTML += `<option value="${i}" ${i===PANEL.quarters.length-1?'selected':''}>${qq}</option>`);
+  const states=new Set();
+  for(const c in PANEL.banks){const s=PANEL.banks[c]._meta?.state; if(s) states.add(s);}
+  const sel=document.getElementById('state');
+  for(const s of [...states].sort()) sel.innerHTML += `<option value="${s}">${s}</option>`;
+  document.getElementById('meta').textContent =
+    `${Object.keys(PANEL.banks).length.toLocaleString()} banks · weighted M&A scoring`;
+  recompute();
+}
+
+function computeBase(qIdx){
+  const recs = [];
+  for(const cert in PANEL.banks){
+    const b = PANEL.banks[cert];
+    const m = b._meta||{}; if(m.active!=='1') continue;
+    const asset = b.ASSET?.[qIdx]; if(!asset) continue;
+    const assetArr = b.ASSET||[];
+    const assetPrev = assetArr.find(v=>v!=null);
+    const assetDelta = (assetPrev && assetPrev>0) ? ((asset-assetPrev)/assetPrev)*100 : 0;
+
+    const roa = b.ROAQ?.[qIdx];
+    const roe = b.ROE?.[qIdx];
+    const eeff = b.EEFFR?.[qIdx];
+    const npl = b.NPERFV?.[qIdx];
+    const rbc = b.RBCRWAJ?.[qIdx];
+    const eqv = b.EQV?.[qIdx];
+    const t1 = b.RBCT1C?.[qIdx];
+    // Capital headroom above 10.5% well-capitalized+buffer: slack $ = (rbc-10.5%) × asset × rwa_proxy
+    // Approximate RWA ≈ 0.75 × asset (industry avg). Slack ≈ (rbc-10.5) * asset * 0.0075
+    const capHead = (rbc!=null && asset) ? Math.max(0,(rbc-10.5)*asset*0.0075) : 0;
+
+    // Avg roa trend across 8q
+    const roaSeries = (b.ROAQ||[]).filter(x=>x!=null);
+    const roaAvg = roaSeries.length ? roaSeries.reduce((a,b)=>a+b,0)/roaSeries.length : null;
+
+    recs.push({cert, name:m.name, state:m.state, bclass:m.class,
+      asset, assetDelta, roa, roaAvg, roe, eeff, npl, rbc, eqv, t1, capHead});
+  }
+  return recs;
+}
+
+function percentile(arr){
+  const s = arr.slice().sort((a,b)=>a-b);
+  return v => {
+    if(v==null || isNaN(v)) return null;
+    let lo=0, hi=s.length;
+    while(lo<hi){const mid=(lo+hi)>>1; if(s[mid]<v) lo=mid+1; else hi=mid;}
+    return (lo/s.length)*100;
+  };
+}
+
+function scoreBanks(recs){
+  // Collect distributions for percentile ranking
+  const roaP    = percentile(recs.map(r=>r.roa).filter(x=>x!=null));
+  const delP    = percentile(recs.map(r=>r.assetDelta).filter(x=>x!=null));
+  const effP    = percentile(recs.map(r=>r.eeff).filter(x=>x!=null));
+  const nplP    = percentile(recs.map(r=>r.npl).filter(x=>x!=null));
+  const sizeP   = percentile(recs.map(r=>r.asset).filter(x=>x!=null));
+  const roeP    = percentile(recs.map(r=>r.roe).filter(x=>x!=null));
+  const rbcP    = percentile(recs.map(r=>r.rbc).filter(x=>x!=null));
+
+  // Weights (target side)
+  const w_roa    = +document.getElementById('wt_roa').value;
+  const w_shrink = +document.getElementById('wt_shrink').value;
+  const w_eff    = +document.getElementById('wt_eff').value;
+  const w_npl    = +document.getElementById('wt_npl').value;
+  const w_size   = +document.getElementById('wt_size').value;
+
+  for(const r of recs){
+    // TARGET score: low ROA (inverted), low/neg assetDelta (inverted), high eeff, high npl, small size
+    const s_roa    = r.roa==null    ? 0 : 100 - (roaP(r.roa)||0);
+    const s_shrink = r.assetDelta==null ? 0 : 100 - (delP(r.assetDelta)||0);
+    const s_eff    = r.eeff==null   ? 0 : (effP(r.eeff)||0);
+    const s_npl    = r.npl==null    ? 0 : (nplP(r.npl)||0);
+    const s_size   = r.asset==null  ? 0 : 100 - (sizeP(r.asset)||0);
+    const wt_sum = Math.max(1, w_roa+w_shrink+w_eff+w_npl+w_size);
+    r.tscore = (w_roa*s_roa + w_shrink*s_shrink + w_eff*s_eff + w_npl*s_npl + w_size*s_size) / wt_sum;
+
+    // ACQUIRER score: strong roe, growing assets, high rbc, size advantage
+    const a_roe    = r.roe==null ? 0 : (roeP(r.roe)||0);
+    const a_grow   = r.assetDelta==null ? 0 : (delP(r.assetDelta)||0);
+    const a_rbc    = r.rbc==null ? 0 : (rbcP(r.rbc)||0);
+    const a_size   = r.asset==null ? 0 : (sizeP(r.asset)||0);
+    const a_eff    = r.eeff==null ? 0 : 100 - (effP(r.eeff)||0);
+    // Acquirer weights fixed (roe 30 / grow 25 / rbc 25 / size 10 / eff 10)
+    r.ascore = (30*a_roe + 25*a_grow + 25*a_rbc + 10*a_size + 10*a_eff) / 100;
+  }
+}
+
+function applyFilters(recs){
+  const st = document.getElementById('state').value;
+  const minA = +document.getElementById('minAsset').value * 1000;
+  const maxA = +document.getElementById('maxAsset').value * 1000;
+  return recs.filter(r=>{
+    if(st && r.state!==st) return false;
+    if(r.asset<minA || r.asset>maxA) return false;
+    return true;
+  });
+}
+
+function renderHeader(recs){
+  const tgts = recs.filter(r=>r.tscore>=70).length;
+  const acqs = recs.filter(r=>r.ascore>=70).length;
+  document.getElementById('kBanks').textContent = recs.length.toLocaleString();
+  document.getElementById('kBanksD').textContent = `filtered universe`;
+  document.getElementById('kTargets').textContent = tgts.toLocaleString();
+  document.getElementById('kAcqs').textContent = acqs.toLocaleString();
+}
+
+function scoreTier(v){ if(v==null) return 0; if(v>=85) return 5; if(v>=70) return 4; if(v>=55) return 3; if(v>=40) return 2; return 1; }
+
+function renderTable(tblId, recs, scoreKey, cols){
+  const which = tblId==='tgtTbl' ? 'tgt' : 'acq';
+  const k = sortKey[which];
+  const dir = sortDir[which]==='desc'?-1:1;
+  recs.sort((a,b)=>{
+    const av=a[k], bv=b[k];
+    if(typeof av==='string') return dir*((av||'').localeCompare(bv||''));
+    return dir*((av==null?-Infinity:av)-(bv==null?-Infinity:bv));
+  });
+  const top = recs.slice(0,25);
+  const tb = document.querySelector('#'+tblId+' tbody');
+  tb.innerHTML = top.map(r=>{
+    const t = scoreTier(r[scoreKey]);
+    return `<tr data-cert="${r.cert}">
+      <td><span class="score s-${t}">${r[scoreKey]==null?'—':r[scoreKey].toFixed(0)}</span></td>
+      <td class="bank">${esc(r.name||'')}</td>
+      <td>${r.state||''}</td>
+      <td class="num">${num(r.asset/1000)}</td>
+      ${cols.map(c=>`<td class="num">${fmtCol(r[c.key], c.fmt)}</td>`).join('')}
+    </tr>`;
+  }).join('');
+  tb.querySelectorAll('tr').forEach(tr=>tr.addEventListener('click',()=>{
+    window.open('bank_profile.html?cert='+tr.dataset.cert, '_self');
+  }));
+}
+
+function fmtCol(v, f){ if(v==null||isNaN(v)) return '—'; return f(v); }
+
+function renderPairs(recs){
+  // Find high targets and high acquirers, pair by same state where acquirer has enough cap slack
+  const tgts = recs.filter(r=>r.tscore>=65 && r.asset!=null).sort((a,b)=>b.tscore-a.tscore);
+  const acqs = recs.filter(r=>r.ascore>=65 && r.capHead>0).sort((a,b)=>b.ascore-a.ascore);
+  const byState = {};
+  for(const a of acqs){ (byState[a.state]=byState[a.state]||[]).push(a); }
+
+  const pairs=[];
+  const used = new Set();
+  for(const t of tgts){
+    const candidates = (byState[t.state]||[]).filter(a=>!used.has(a.cert) && a.capHead>=t.asset*0.3);
+    if(candidates.length){
+      // Best acquirer: highest ascore
+      const a = candidates[0];
+      used.add(a.cert);
+      pairs.push({t,a});
+      if(pairs.length>=12) break;
+    }
+  }
+  document.getElementById('kPairs').textContent = pairs.length.toString();
+
+  const html = pairs.map(({t,a})=>`
+    <div class="match">
+      <div class="a tgt-tint" style="border-right:none;display:flex;justify-content:space-between">
+        <div>
+          <div class="nm">${esc(t.name)}</div>
+          <div class="mt">CERT ${t.cert} · ${t.state} · $${fmtM(t.asset)} · ROA ${t.roa==null?'—':t.roa.toFixed(2)+'%'}</div>
+        </div>
+        <span class="score s-${scoreTier(t.tscore)}">${t.tscore.toFixed(0)}</span>
+      </div>
+      <div class="arrow">↓ target</div>
+      <div class="b acq-tint" style="border-left:none;display:flex;justify-content:space-between">
+        <div>
+          <div class="nm">${esc(a.name)}</div>
+          <div class="mt">CERT ${a.cert} · ${a.state} · $${fmtM(a.asset)} · RBC ${a.rbc==null?'—':a.rbc.toFixed(1)+'%'}</div>
+        </div>
+        <span class="score s-${scoreTier(a.ascore)}">${a.ascore.toFixed(0)}</span>
+      </div>
+      <div style="text-align:center;font-size:10.5px;color:var(--muted);margin-top:4px;font-family:'JetBrains Mono',monospace">acquirer cap slack ≈ $${fmtM(a.capHead)}</div>
+    </div>`).join('');
+  document.getElementById('pairBox').innerHTML = html || `<div style="padding:24px;color:var(--muted);text-align:center;grid-column:span 2">No same-state pairings with current filters.</div>`;
+}
+
+function recompute(){
+  const qIdx = +document.getElementById('qtr').value;
+  const recs = computeBase(qIdx);
+  scoreBanks(recs);
+  const filtered = applyFilters(recs);
+  renderHeader(filtered);
+  renderTable('tgtTbl', filtered.filter(r=>r.tscore>=30).slice().sort((a,b)=>b.tscore-a.tscore), 'tscore', [
+    {key:'roa',fmt:v=>v.toFixed(2)},
+    {key:'assetDelta',fmt:v=>(v>=0?'+':'')+v.toFixed(1)+'%'},
+    {key:'eeff',fmt:v=>v.toFixed(1)},
+    {key:'npl',fmt:v=>v.toFixed(2)},
+  ]);
+  renderTable('acqTbl', filtered.filter(r=>r.ascore>=30).slice().sort((a,b)=>b.ascore-a.ascore), 'ascore', [
+    {key:'roe',fmt:v=>v.toFixed(2)},
+    {key:'assetDelta',fmt:v=>(v>=0?'+':'')+v.toFixed(1)+'%'},
+    {key:'rbc',fmt:v=>v.toFixed(1)},
+    {key:'capHead',fmt:v=>'$'+fmtM(v)},
+  ]);
+  renderPairs(filtered);
+  REC = filtered;
+}
+
+function num(v){if(v==null||isNaN(v))return '—';return Number(v).toLocaleString(undefined,{maximumFractionDigits:0})}
+function fmtM(v){if(v==null)return '—';if(v>=1e6) return (v/1e6).toFixed(2)+'B'; if(v>=1e3) return (v/1e3).toFixed(1)+'M'; return (v||0).toFixed(0)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+['qtr','state'].forEach(id=>document.getElementById(id).addEventListener('change',recompute));
+['minAsset','maxAsset'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',e=>{
+    document.getElementById(id+'V').textContent=(+e.target.value).toLocaleString();
+    recompute();
+  });
+});
+['wt_roa','wt_shrink','wt_eff','wt_npl','wt_size'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',e=>{
+    document.getElementById(id+'V').textContent=e.target.value;
+    recompute();
+  });
+});
+document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>{
+  const which = th.dataset.tbl, k = th.dataset.sort;
+  if(sortKey[which]===k) sortDir[which]=(sortDir[which]==='desc'?'asc':'desc'); else { sortKey[which]=k; sortDir[which]='desc'; }
+  recompute();
+}));
+
+loadData().catch(e=>{
+  document.getElementById('errBox').innerHTML =
+    `<div class="err"><b>Could not load data.</b> Serve over HTTP: <code>python3 -m http.server 8765</code>. Error: ${e.message}</div>`;
+});
+</script>
+</body>
+</html>

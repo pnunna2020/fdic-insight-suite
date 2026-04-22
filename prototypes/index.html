@@ -273,14 +273,14 @@
   </div>
   <div class="topbar-meta">
     <div><span class="live-dot"></span>Local data · <b>2024 Q1 → 2025 Q4</b></div>
-    <div>3 prototypes · <b>v0.2</b></div>
+    <div>7 prototypes · <b>v0.3</b></div>
   </div>
 </div>
 
 <section class="hero">
   <div class="eyebrow">Reusable analytics platform · Federal pilot</div>
   <h1 class="display">A regulator-grade<br>banking intelligence layer<br>over <span class="accent">FDIC Call Report data.</span></h1>
-  <p class="lead">Three working prototypes built directly on the FDIC bulk data — Institutions, Locations, and eight quarters of Call Report (CDI · RAT · FTS). A semantic layer for natural-language query, a composite run-risk monitor with adjustable supervisory weights, and a 7-axis concentration &amp; funding X-Ray with per-bank fingerprints.</p>
+  <p class="lead">Seven working prototypes built directly on the FDIC bulk data — Institutions, Locations, and eight quarters of Call Report (CDI · RAT · FTS). Semantic-layer query, composite run-risk scoring, 7-axis concentration fingerprints, CRE/ADC supervisory review, a single-bank hub, dynamic peer cohorts, and an M&amp;A target/acquirer scorer — all sharing one preprocessed data layer.</p>
 </section>
 
 <section class="stat-strip">
@@ -348,30 +348,71 @@
       <span class="arrow">Open prototype →</span>
     </div>
   </a>
+
+  <a class="app-card" href="cre_examiner.html">
+    <div class="app-tag-row">
+      <span class="tag">Layer 2</span>
+      <span class="tag purple">App #04</span>
+      <span class="tag gold">Supervisory</span>
+    </div>
+    <h2>CRE / ADC<br>Examiner View</h2>
+    <p class="desc">The supervisory CRE concentration lens — CRE-to-Tier-1 and construction (ADC)-to-Tier-1 ratios against the 2006 Interagency 300% / 100% thresholds. Heatmap, 8-quarter trend with threshold lines, and a plain-English examiner read per bank.</p>
+    <div class="meta">
+      <span>LNRERT1R · LNCONT1R · RBCT1C · dual-flag watchlist</span>
+      <span class="arrow">Open prototype →</span>
+    </div>
+  </a>
+
+  <a class="app-card" href="bank_profile.html">
+    <div class="app-tag-row">
+      <span class="tag">Layer 2</span>
+      <span class="tag purple">App #18</span>
+      <span class="tag gold">Hub</span>
+    </div>
+    <h2>Bank Profile<br>Explorer</h2>
+    <p class="desc">The central hub — search any of 4,651 banks, see institution metadata, headline ratios, 8-quarter balance-sheet trend, earnings and risk charts, and one-click deep-links that carry the selected bank into every other app in the suite.</p>
+    <div class="meta">
+      <span>Autocomplete · KPI grid · cross-app deep-links</span>
+      <span class="arrow">Open prototype →</span>
+    </div>
+  </a>
+
+  <a class="app-card" href="peer_cohort.html">
+    <div class="app-tag-row">
+      <span class="tag">Layer 1</span>
+      <span class="tag purple">App #07</span>
+      <span class="tag gold">Peers</span>
+    </div>
+    <h2>Peer Cohort<br>Builder</h2>
+    <p class="desc">Define peer groups by asset range, region, charter class. Percentile-rank any target bank <i>inside</i> its custom cohort across 10 ratios — ROA, ROE, NIM, efficiency, capital, L/D, NPL, noncore funding, CRE concentration. Distribution bars with the target marker.</p>
+    <div class="meta">
+      <span>Dynamic cohort · 10 metrics · boxplot bars</span>
+      <span class="arrow">Open prototype →</span>
+    </div>
+  </a>
+
+  <a class="app-card" href="ma_intelligence.html">
+    <div class="app-tag-row">
+      <span class="tag">Layer 2</span>
+      <span class="tag purple">App #14</span>
+      <span class="tag gold">M&amp;A</span>
+    </div>
+    <h2>M&amp;A<br>Intelligence</h2>
+    <p class="desc">Composite scoring for likely targets (weak ROA + shrinking balance sheet + stressed efficiency) and likely acquirers (strong ROE + growth + capital headroom). Adjustable weights, capital-slack sizing, and same-state pairing suggestions.</p>
+    <div class="meta">
+      <span>Two-side scoring · pairings · 5-tier heat</span>
+      <span class="arrow">Open prototype →</span>
+    </div>
+  </a>
 </section>
 
 <section class="roadmap">
   <h3>Next on the same platform</h3>
   <div class="next-grid">
     <div class="next">
-      <div class="num">App #07 · Peer Cohort Builder</div>
-      <h4>Dynamic peer groups</h4>
-      <p>Build custom peer groups by asset bucket, geography, charter class — then auto-rank any bank against them on any ratio in the dictionary.</p>
-    </div>
-    <div class="next">
       <div class="num">App #06 · QBP++ Dashboard</div>
       <h4>National banking rollups</h4>
       <p>Aggregate the 4,651-bank panel into industry/state/class views. Reuse the percentile engine to flag outlier cohorts.</p>
-    </div>
-    <div class="next">
-      <div class="num">App #14 · M&amp;A Intelligence</div>
-      <h4>MERG + STRU change feed</h4>
-      <p>Quarterly merger and structure-change stream with LLM-generated executive summaries. Needs the MERG / STRU files (both already pulled).</p>
-    </div>
-    <div class="next">
-      <div class="num">App #18 · Bank Profile Explorer</div>
-      <h4>Per-institution deep-dive</h4>
-      <p>Full per-bank page driven by the semantic layer — peer comparison, eight-quarter ratio history, branch geography, M&amp;A history.</p>
     </div>
     <div class="next">
       <div class="num">App #21 · Early Warning</div>

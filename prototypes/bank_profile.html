@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Bank Profile Explorer · FDIC Insight Suite</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg-0:#05070f;--surface:rgba(20,28,52,.55);--surface-2:rgba(28,38,68,.65);--surface-3:rgba(11,16,34,.85);
+    --border:rgba(120,148,210,.16);--border-strong:rgba(140,170,230,.32);
+    --text:#e8edf7;--text-dim:#a4b0cf;--muted:#6f7d9e;
+    --accent:#5cc8ff;--accent-2:#9d7cff;--gold:#f0c674;
+    --emerald:#34d399;--amber:#fbbf24;--coral:#fb7185;--crimson:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%}
+  body{background:var(--bg-0);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .bg-mesh{position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(ellipse 70% 50% at 10% 0%,rgba(92,200,255,.10),transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 100%,rgba(157,124,255,.08),transparent 60%),
+      var(--bg-0);}
+  .bg-grid{position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background-image:linear-gradient(rgba(120,148,210,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(120,148,210,.04) 1px,transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 30%,black 30%,transparent 80%);
+    -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 30%,black 30%,transparent 80%);}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);height:62px;background:linear-gradient(180deg,rgba(8,12,28,.85),rgba(8,12,28,.55));backdrop-filter:blur(14px);position:sticky;top:0;z-index:10}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:28px;height:28px;border-radius:7px;background:conic-gradient(from 220deg,var(--accent),var(--accent-2),var(--gold),var(--accent));box-shadow:0 0 16px rgba(92,200,255,.35),inset 0 0 0 1px rgba(255,255,255,.1);position:relative}
+  .brand-mark::after{content:'';position:absolute;inset:4px;border-radius:4px;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.25),transparent 60%),var(--bg-0)}
+  .brand-text{display:flex;flex-direction:column;line-height:1.1}
+  .brand-text .nm{font-weight:700;font-size:13px;letter-spacing:-.01em}
+  .brand-text .sub{font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+  .topbar a.back{color:var(--text-dim);text-decoration:none;font-size:12.5px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace;transition:.2s}
+  .topbar a.back:hover{color:var(--accent);border-color:var(--border-strong)}
+  .topbar-right{display:flex;align-items:center;gap:18px;font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .topbar-right .badge-app{padding:3px 10px;border-radius:5px;background:rgba(92,200,255,.1);color:var(--accent);border:1px solid rgba(92,200,255,.3);font-weight:600}
+
+  .wrap{max-width:1280px;margin:0 auto;padding:28px 32px 80px}
+
+  .search-hero{position:relative;margin-bottom:30px}
+  .search-hero .tag{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:99px;border:1px solid var(--border-strong);background:rgba(92,200,255,.08);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:16px}
+  .search-hero h1{font-size:32px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px;background:linear-gradient(180deg,#fff 40%,#9bb1de 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .search-hero p{color:var(--text-dim);font-size:14.5px;max-width:640px;margin-bottom:20px}
+  .search-box{position:relative;max-width:680px}
+  .search-box input{width:100%;background:var(--surface);border:1px solid var(--border-strong);color:var(--text);padding:14px 18px 14px 46px;border-radius:12px;font-size:15px;outline:0;font-family:inherit;backdrop-filter:blur(16px);transition:.2s}
+  .search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(92,200,255,.12)}
+  .search-box::before{content:'⌕';position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:18px}
+  .suggest{position:absolute;z-index:5;left:0;right:0;margin-top:4px;background:var(--surface-3);border:1px solid var(--border-strong);border-radius:12px;max-height:320px;overflow:auto;backdrop-filter:blur(16px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
+  .suggest .s{padding:10px 16px;font-size:13px;cursor:pointer;border-bottom:1px solid rgba(120,148,210,.06);display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .suggest .s:hover,.suggest .s.active{background:rgba(92,200,255,.08)}
+  .suggest .s .meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+  .suggest .s .bnm{font-weight:500}
+
+  .profile-head{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 28px;margin-bottom:18px;backdrop-filter:blur(16px);position:relative;overflow:hidden}
+  .profile-head::before{content:'';position:absolute;inset:-1px;border-radius:16px;padding:1px;background:linear-gradient(135deg,rgba(92,200,255,.35),rgba(157,124,255,.2) 50%,transparent 85%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+  .profile-head h2{font-size:28px;font-weight:700;letter-spacing:-.02em;margin-bottom:4px}
+  .profile-head .subinfo{font-size:12.5px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;margin-bottom:16px}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;padding:4px 10px;border-radius:6px;background:rgba(92,200,255,.1);color:var(--accent);border:1px solid rgba(92,200,255,.2)}
+  .chip.g{background:rgba(52,211,153,.1);color:var(--emerald);border-color:rgba(52,211,153,.2)}
+  .chip.p{background:rgba(157,124,255,.1);color:var(--accent-2);border-color:rgba(157,124,255,.2)}
+  .chip.a{background:rgba(240,198,116,.1);color:var(--gold);border-color:rgba(240,198,116,.2)}
+  .chip.r{background:rgba(239,68,68,.1);color:#fca5a5;border-color:rgba(239,68,68,.25)}
+
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;backdrop-filter:blur(14px)}
+  .kpi .l{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;font-weight:600}
+  .kpi .v{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;margin-top:6px;letter-spacing:-.02em;background:linear-gradient(180deg,#fff,#a8b8d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .kpi .d{font-size:11px;color:var(--muted);margin-top:4px;font-family:'JetBrains Mono',monospace}
+  .kpi .d.pos{color:var(--emerald)}
+  .kpi .d.neg{color:var(--coral)}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:18px;backdrop-filter:blur(14px)}
+  .panel h3{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--text-dim);font-weight:600;margin-bottom:14px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+  .ratio-tbl{width:100%;font-size:12.5px}
+  .ratio-tbl td{padding:7px 0;border-bottom:1px solid rgba(120,148,210,.06)}
+  .ratio-tbl td.l{color:var(--text-dim)}
+  .ratio-tbl td.v{text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-weight:600}
+  .ratio-tbl td.v.bad{color:#fca5a5}
+  .ratio-tbl td.v.warn{color:#fde68a}
+  .ratio-tbl td.v.good{color:#86efac}
+
+  canvas{max-height:220px}
+
+  .link-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+  .lnk{padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(11,16,34,.5);color:var(--text-dim);text-decoration:none;font-size:12.5px;transition:.2s;display:flex;flex-direction:column;gap:4px}
+  .lnk:hover{border-color:var(--border-strong);color:var(--text);background:rgba(92,200,255,.06)}
+  .lnk .a{font-weight:600;color:var(--accent);font-size:12px}
+  .lnk .b{font-size:10.5px;color:var(--muted)}
+
+  .placeholder{text-align:center;color:var(--muted);font-size:13px;padding:80px 20px;line-height:1.6}
+  .placeholder .icon{font-size:40px;opacity:.3;margin-bottom:14px}
+
+  @media (max-width:1000px){.grid-4{grid-template-columns:1fr 1fr}.grid-2{grid-template-columns:1fr}.link-row{grid-template-columns:1fr 1fr}}
+  @media (max-width:700px){.grid-4{grid-template-columns:1fr}.link-row{grid-template-columns:1fr}.wrap{padding:20px}}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div class="brand-text">
+      <div class="nm">FDIC Insight Suite</div>
+      <div class="sub">Bank Profile Explorer · App #18</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge-app">CENTRAL HUB</span>
+    <span id="meta">Loading…</span>
+    <a class="back" href="index.html">← Suite</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="search-hero">
+    <div class="tag">⌕ Single-bank drill-down</div>
+    <h1>Look up any FDIC-insured bank.</h1>
+    <p>Search across 4,651 banks in the 8-quarter Call Report panel. Get the institution metadata, the financial summary, headline ratios, 8-quarter trends, and one-click deep-links into every other app in the suite.</p>
+    <div class="search-box">
+      <input id="q" placeholder="Start typing a bank name, CERT number, or state…" autocomplete="off" />
+      <div id="suggest" class="suggest" style="display:none"></div>
+    </div>
+  </div>
+
+  <div id="content">
+    <div class="placeholder">
+      <div class="icon">◫</div>
+      Pick a bank above — try <b>JPMorgan</b>, <b>First Republic</b>, <b>TrustCo</b>, <b>Interaudi</b>, <b>Third Federal</b>, <b>CERT 3511</b>, or search by state like <b>"NY"</b>.
+    </div>
+  </div>
+</div>
+
+<script>
+let PANEL=null, QTR=null, SUGG=[], suggIdx=-1;
+const Q_LATEST=7;
+let CHART_DEFAULTS_SET=false;
+
+function setChartDefaults(){
+  if(CHART_DEFAULTS_SET) return;
+  Chart.defaults.color='#a4b0cf';
+  Chart.defaults.font.family="'Inter',sans-serif";
+  Chart.defaults.font.size=10.5;
+  CHART_DEFAULTS_SET=true;
+}
+
+async function loadData(){
+  setChartDefaults();
+  PANEL = await fetch('./data/liquidity_panel.json').then(r=>r.json());
+  QTR = PANEL.quarters;
+  document.getElementById('meta').textContent = `${Object.keys(PANEL.banks).length.toLocaleString()} banks · ${QTR.length} quarters`;
+  // Build searchable index
+  SUGG = [];
+  for(const cert in PANEL.banks){
+    const b = PANEL.banks[cert];
+    const m = b._meta||{};
+    SUGG.push({cert, name:m.name||'', state:m.state||'', city:m.city||'', cls:m.class||'', active:m.active==='1', asset:(b.ASSET||[])[Q_LATEST]});
+  }
+  // URL deep-link: ?cert=xxxx
+  const u = new URLSearchParams(location.search);
+  if(u.get('cert') && PANEL.banks[u.get('cert')]) renderBank(u.get('cert'));
+}
+
+function search(q){
+  q = q.trim().toLowerCase(); if(!q) return [];
+  const isNum = /^\d+$/.test(q);
+  const scored = [];
+  for(const r of SUGG){
+    let score=0;
+    const n=r.name.toLowerCase();
+    if(isNum){
+      if(r.cert===q) score=1000;
+      else if(r.cert.startsWith(q)) score=100;
+      else continue;
+    } else {
+      if(n.startsWith(q)) score=100;
+      else if(n.includes(q)) score=50;
+      else if(r.state.toLowerCase()===q) score=40;
+      else if(r.city.toLowerCase().includes(q)) score=20;
+      else continue;
+    }
+    if(r.active) score+=5;
+    if(r.asset) score += Math.min(10, Math.log10(r.asset+1));
+    scored.push({...r,score});
+  }
+  scored.sort((a,b)=>b.score-a.score);
+  return scored.slice(0,12);
+}
+
+function renderSuggest(items){
+  const el = document.getElementById('suggest');
+  if(!items.length){el.style.display='none'; return;}
+  el.style.display='block';
+  el.innerHTML = items.map((r,i)=>`
+    <div class="s ${i===suggIdx?'active':''}" data-cert="${r.cert}">
+      <div>
+        <div class="bnm">${esc(r.name)}${r.active?'':' <span style="color:var(--muted);font-size:11px">(inactive)</span>'}</div>
+        <div class="meta">CERT ${r.cert} · ${r.city||'—'}, ${r.state||'—'} · Class ${r.cls||'—'}</div>
+      </div>
+      <div class="meta">${r.asset?fmtM(r.asset):'—'}</div>
+    </div>`).join('');
+  el.querySelectorAll('.s').forEach(s=>s.addEventListener('click',()=>{
+    renderBank(s.dataset.cert);
+    document.getElementById('q').value='';
+    el.style.display='none';
+  }));
+}
+
+function renderBank(cert){
+  const b = PANEL.banks[cert]; if(!b) return;
+  const m = b._meta||{};
+  const last = i => (b[i]||[])[Q_LATEST];
+  const delta = arr=>{
+    if(!arr||arr.length<2) return null;
+    const cur=arr[arr.length-1], prev=arr[0];
+    if(cur==null||prev==null||prev===0) return null;
+    return ((cur-prev)/prev)*100;
+  };
+
+  // Top KPIs
+  const asset=last('ASSET'), dep=last('DEP'), eq=last('EQ'), ni=last('NETINC');
+  const assetDelta = delta(b.ASSET), depDelta=delta(b.DEP);
+  // Ratios
+  const roa=last('ROAQ'), roe=last('ROE'), nim=last('NIMQY1'), eeff=last('EEFFR');
+  const ldr=last('LNLSDEPR'), ncore=last('NCOREQ1'), eqv=last('EQV'), rbc=last('RBCRWAJ');
+  const npl=last('NPERFV'), cre=last('LNRERT1R'), adc=last('LNCONT1R'), t1=last('RBCT1C');
+  const dep_ins=last('DEPINS'); const uni = (dep&&dep_ins) ? ((1-dep_ins/dep)*100) : null;
+
+  const tierChip = (()=>{
+    if(rbc==null) return '';
+    if(rbc>=13) return '<span class="chip g">Well-capitalized</span>';
+    if(rbc>=10.5) return '<span class="chip a">Adequately-capitalized</span>';
+    return '<span class="chip r">Below buffer</span>';
+  })();
+  const creChip = cre!=null && cre>300 ? '<span class="chip r">CRE flag</span>' : '';
+  const adcChip = adc!=null && adc>100 ? '<span class="chip r">ADC flag</span>' : '';
+  const uniChip = uni!=null && uni>50 ? '<span class="chip a">High uninsured</span>' : '';
+  const activeChip = m.active==='1' ? '<span class="chip g">Active</span>' : '<span class="chip">Inactive</span>';
+
+  const html = `
+    <div class="profile-head">
+      <h2>${esc(m.name||'Unknown')}</h2>
+      <div class="subinfo">CERT ${cert} · ${esc(m.city||'—')}, ${esc(m.state||'—')} · Class ${esc(m.class||'—')} · As of ${QTR[Q_LATEST]}</div>
+      <div class="chip-row">
+        ${activeChip} ${tierChip} ${creChip} ${adcChip} ${uniChip}
+      </div>
+    </div>
+
+    <div class="grid-4">
+      <div class="kpi"><div class="l">Total assets</div><div class="v">$${asset==null?'—':fmtM(asset)}</div><div class="d ${assetDelta>0?'pos':'neg'}">${fmtDelta(assetDelta)} 8-qtr</div></div>
+      <div class="kpi"><div class="l">Total deposits</div><div class="v">$${dep==null?'—':fmtM(dep)}</div><div class="d ${depDelta>0?'pos':'neg'}">${fmtDelta(depDelta)} 8-qtr</div></div>
+      <div class="kpi"><div class="l">Equity capital</div><div class="v">$${eq==null?'—':fmtM(eq)}</div><div class="d">${eqv==null?'—':eqv.toFixed(1)+'% of assets'}</div></div>
+      <div class="kpi"><div class="l">Net income (qtr)</div><div class="v">$${ni==null?'—':fmtM(ni)}</div><div class="d">${roa==null?'—':'ROA ' + roa.toFixed(2) + '%'}</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Profitability &amp; efficiency · ${QTR[Q_LATEST]}</h3>
+        <table class="ratio-tbl">
+          ${row('Return on assets (ROA)', roa, '%', {good:1.0, warn:0.5})}
+          ${row('Return on equity (ROE)', roe, '%', {good:10, warn:5})}
+          ${row('Net interest margin',  nim, '%', {good:3.5, warn:2.5})}
+          ${row('Efficiency ratio',     eeff, '%', {good:60, warn:70}, true)}
+          ${row('Loans / deposits',     ldr, '%', {good:85, warn:95}, true)}
+        </table>
+      </div>
+      <div class="panel">
+        <h3>Capital, concentration &amp; asset quality</h3>
+        <table class="ratio-tbl">
+          ${row('Total risk-based cap ratio', rbc, '%', {good:13, warn:10.5})}
+          ${row('Equity / assets',            eqv, '%', {good:9, warn:7})}
+          ${row('CRE / Tier 1 capital',       cre, '%', {good:200, warn:300}, true)}
+          ${row('ADC / Tier 1 capital',       adc, '%', {good:50, warn:100}, true)}
+          ${row('Uninsured deposits',         uni, '%', {good:30, warn:50}, true)}
+          ${row('Noncurrent + OREO',          npl, '%', {good:0.5, warn:1.5}, true)}
+          ${row('Noncore funding',            ncore, '%', {good:15, warn:30}, true)}
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Balance sheet · 8-quarter trend</h3>
+      <canvas id="chBS"></canvas>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Earnings ratios · 8 quarters</h3>
+        <canvas id="chEarn"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Risk ratios · 8 quarters</h3>
+        <canvas id="chRisk"></canvas>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Open in other apps · pre-selected to this bank</h3>
+      <div class="link-row">
+        <a class="lnk" href="liquidity_monitor.html"><span class="a">Liquidity &amp; Run-Risk →</span><span class="b">Composite score &amp; drill-down</span></a>
+        <a class="lnk" href="concentration_xray.html"><span class="a">Concentration X-Ray →</span><span class="b">7-axis risk fingerprint</span></a>
+        <a class="lnk" href="cre_examiner.html"><span class="a">CRE / ADC Examiner →</span><span class="b">Supervisory concentration view</span></a>
+        <a class="lnk" href="peer_cohort.html?cert=${cert}"><span class="a">Peer Cohort Builder →</span><span class="b">Compare vs custom peers</span></a>
+      </div>
+    </div>
+  `;
+  document.getElementById('content').innerHTML = html;
+
+  // Charts
+  drawLine('chBS', QTR, [
+    {l:'Total assets ($M)',    d:(b.ASSET||[]).map(v=>v==null?null:v/1000), c:'#5cc8ff', fill:true, bg:'rgba(92,200,255,.08)'},
+    {l:'Total deposits ($M)',  d:(b.DEP||[]).map(v=>v==null?null:v/1000),   c:'#9d7cff'},
+    {l:'Equity ($M)',          d:(b.EQ||[]).map(v=>v==null?null:v/1000),    c:'#f0c674'},
+  ]);
+  drawLine('chEarn', QTR, [
+    {l:'ROA (%)',           d:b.ROAQ||[],    c:'#34d399'},
+    {l:'NIM (%)',           d:b.NIMQY1||[],  c:'#5cc8ff'},
+    {l:'Efficiency (%)',    d:b.EEFFR||[],   c:'#fbbf24'},
+  ]);
+  drawLine('chRisk', QTR, [
+    {l:'NCore funding (%)', d:b.NCOREQ1||[], c:'#fb7185'},
+    {l:'Loans/Deposits (%)',d:b.LNLSDEPR||[],c:'#f0c674'},
+    {l:'Noncurrent+OREO (%)',d:b.NPERFV||[], c:'#ef4444'},
+  ]);
+
+  history.replaceState(null,'',`?cert=${cert}`);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function row(label, v, unit, thr, reverse=false){
+  if(v==null||isNaN(v)) return `<tr><td class="l">${label}</td><td class="v">—</td></tr>`;
+  let cls='';
+  if(reverse){ if(v>thr.warn) cls='bad'; else if(v>thr.good) cls='warn'; else cls='good'; }
+  else        { if(v<thr.warn) cls='bad'; else if(v<thr.good) cls='warn'; else cls='good'; }
+  return `<tr><td class="l">${label}</td><td class="v ${cls}">${v.toFixed(2)}${unit}</td></tr>`;
+}
+
+function drawLine(id, labels, series){
+  new Chart(document.getElementById(id),{
+    type:'line',
+    data:{labels, datasets: series.map(s=>({
+      label:s.l, data:s.d, borderColor:s.c, backgroundColor:s.bg||s.c+'22',
+      borderWidth:2, pointRadius:3, tension:.25, fill:!!s.fill,
+    }))},
+    options:{responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}},
+        tooltip:{backgroundColor:'#0a0e1f',borderColor:'rgba(120,148,210,.32)',borderWidth:1,padding:8,cornerRadius:6}},
+      scales:{x:{grid:{color:'rgba(120,148,210,.06)'},ticks:{font:{size:9.5}}},
+              y:{grid:{color:'rgba(120,148,210,.06)'}}}}
+  });
+}
+
+function fmtM(v){if(v==null)return '—';if(Math.abs(v)>=1e6) return (v/1e6).toFixed(2)+'B'; if(Math.abs(v)>=1e3) return (v/1e3).toFixed(1)+'M'; return v.toFixed(0)+'K';}
+function fmtDelta(v){if(v==null)return '—';return (v>=0?'+':'')+v.toFixed(1)+'%';}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+const inp = document.getElementById('q');
+inp.addEventListener('input',e=>{
+  const items = search(e.target.value);
+  suggIdx=-1;
+  renderSuggest(items);
+});
+inp.addEventListener('keydown',e=>{
+  const items = search(inp.value);
+  if(!items.length) return;
+  if(e.key==='ArrowDown'){ suggIdx=Math.min(items.length-1,suggIdx+1); renderSuggest(items); e.preventDefault(); }
+  else if(e.key==='ArrowUp'){ suggIdx=Math.max(-1,suggIdx-1); renderSuggest(items); e.preventDefault(); }
+  else if(e.key==='Enter'){
+    const pick = items[Math.max(0,suggIdx)];
+    if(pick){renderBank(pick.cert); inp.value=''; document.getElementById('suggest').style.display='none'; e.preventDefault();}
+  }
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.search-box')) document.getElementById('suggest').style.display='none';
+});
+
+loadData().catch(e=>{
+  document.getElementById('content').innerHTML =
+    `<div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);color:#fca5a5;padding:14px 18px;border-radius:10px">
+    <b>Could not load data.</b> Serve over HTTP: <code>python3 -m http.server 8765</code>. Error: ${e.message}</div>`;
+});
+</script>
+</body>
+</html>

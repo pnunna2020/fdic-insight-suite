@@ -1,8 +1,17 @@
 # FDIC Insight Suite — Prototypes
 
 A reusable AI-product framework for federal banking data, built on top of the FDIC BankFind bulk-download corpus.
-This repo contains two working prototypes that exercise the platform's reusable Layer 1 (semantic layer + entity index)
-and one Layer 2 application (Liquidity & Run-Risk Monitor / "App 17").
+This repo contains **seven** working prototypes: the semantic layer (Layer 1) plus six Layer-2 applications, all sharing one preprocessed data layer derived from the FDIC Call Report bulk download (CDI · RAT · FTS · Institutions · Locations).
+
+| # | App | What it does |
+|---|-----|--------------|
+| 10 | [Semantic Layer](prototypes/semantic_layer.html) | Natural-language query over the 2,635-variable unified dictionary |
+| 17 | [Liquidity &amp; Run-Risk Monitor](prototypes/liquidity_monitor.html) | 6-component composite run-risk score, adjustable weights |
+| 3  | [Concentration &amp; Funding X-Ray](prototypes/concentration_xray.html) | 7-axis per-bank risk fingerprint + heatmap + radar drill-down |
+| 4  | [CRE / ADC Examiner](prototypes/cre_examiner.html) | Supervisory 300%/100% Tier-1 concentration review (LNRERT1R, LNCONT1R) |
+| 18 | [Bank Profile Explorer](prototypes/bank_profile.html) | Central single-bank hub with cross-app deep-links |
+| 7  | [Peer Cohort Builder](prototypes/peer_cohort.html) | Dynamic peer groups + percentile ranking on 10 ratios |
+| 14 | [M&amp;A Intelligence](prototypes/ma_intelligence.html) | Target / acquirer composite scoring + same-state pairing |
 
 ## Repo layout
 

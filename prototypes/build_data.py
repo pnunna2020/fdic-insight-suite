@@ -186,9 +186,18 @@ LIQUIDITY_VARS = {
         "NCOREQ1",      # noncore funding / assets (qtr)
         "NCOREY1",      # noncore funding / assets (ytd)
         "ROAQ",         # return on assets (qtr)
+        "ROAPTX",       # pre-tax ROA (qtr)
+        "ROE",          # return on equity (qtr)
         "NIMQY1",       # net interest margin (qtr)
+        "EEFFR",        # efficiency ratio
         "NPERFV",       # noncurrent assets+OREO / assets
         "EQV",          # equity / assets
+        "LNRERT1R",     # CRE loans / Tier 1 capital  (supervisory 300% threshold)
+        "LNCONT1R",     # construction (ADC) / Tier 1  (supervisory 100% threshold)
+        "LNCIT1R",      # C&I / Tier 1
+        "LNAGT1R",      # agricultural / Tier 1
+        "RBCRWAJ",      # total risk-based capital ratio (%)
+        "RBC1RWAJ",     # Tier 1 risk-based capital ratio (%)
     ],
     "FTS": [
         "ASSET",        # total assets (size)
@@ -203,6 +212,11 @@ LIQUIDITY_VARS = {
         "SCHTMRES",     # HTM securities residual
         "ALNSCHTM",     # allowance / HTM
         "DEPLGA",       # large deposit amounts (advanced detail)
+        "LNRE",         # total real estate loans
+        "LNRECONS",     # construction loans ($) — ADC numerator
+        "NETINC",       # net income ($)
+        "NUMEMP",       # full-time equivalent employees
+        "RBCT1C",       # Tier 1 capital ($)
     ],
 }
 
