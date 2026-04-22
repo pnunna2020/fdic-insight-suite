@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FDIC Regulatory Comparison — Cohort Benchmark</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg-0:#f7f8fb; --bg-1:#ffffff; --bg-2:#f1f3f8;
+  --ink-0:#0b1a2b; --ink-1:#354358; --ink-2:#6a7690; --ink-3:#9aa3b9;
+  --line:#e3e7ef; --line-2:#ced4e0;
+  --accent:#0b63d6; --accent-2:#1b84ff; --accent-soft:#e8f1ff;
+  --ok:#0e8a4f; --ok-soft:#e3f6ec;
+  --warn:#b5730a; --warn-soft:#fff4e0;
+  --bad:#c62533; --bad-soft:#fde6e8;
+  --violet:#5f4bd4; --violet-soft:#ece8ff;
+  --shadow:0 1px 2px rgba(10,24,46,.04), 0 4px 14px rgba(10,24,46,.06);
+  --shadow-lg:0 6px 28px rgba(10,24,46,.12);
+  --radius:12px; --radius-sm:8px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg-0);color:var(--ink-0);
+  font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:13.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.topbar{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,#fff 0%,#fbfcfe 100%);
+  border-bottom:1px solid var(--line);padding:10px 22px;display:flex;align-items:center;gap:18px;box-shadow:var(--shadow)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink-0)}
+.brand .dot{width:10px;height:10px;border-radius:2px;background:linear-gradient(135deg,var(--accent),var(--violet))}
+.brand small{font-weight:500;color:var(--ink-2);margin-left:6px}
+.nav{display:flex;gap:4px;margin-left:16px;flex-wrap:wrap}
+.nav a{padding:7px 12px;border-radius:8px;color:var(--ink-1);font-weight:500;font-size:12.5px;transition:all .2s ease}
+.nav a:hover{background:var(--accent-soft);color:var(--accent);text-decoration:none}
+.nav a.active{background:var(--ink-0);color:#fff}
+.grow{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+  background:var(--bg-2);color:var(--ink-1);font-size:11.5px;font-weight:500;border:1px solid var(--line)}
+.wrap{display:grid;grid-template-columns:260px 1fr 420px;gap:18px;padding:18px 22px;max-width:1700px;margin:0 auto;animation:fadein .3s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+aside.filters,main.panel,aside.detail{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+aside.filters{padding:16px;position:sticky;top:64px;align-self:flex-start;max-height:calc(100vh - 80px);overflow:auto}
+.filters h3{margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.filters p.hint{margin:0 0 14px;font-size:11.5px;color:var(--ink-2);line-height:1.5}
+.filter-group{margin-bottom:16px;padding-bottom:16px;border-bottom:1px dashed var(--line)}
+.filter-group:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.filter-group label{display:block;font-size:11.5px;font-weight:600;color:var(--ink-1);margin-bottom:6px}
+.filter-group select,.filter-group input[type=text],.filter-group input[type=number]{
+  width:100%;padding:7px 9px;border:1px solid var(--line-2);border-radius:var(--radius-sm);
+  background:#fff;font:inherit;font-size:12.5px;color:var(--ink-0);transition:border .15s}
+.filter-group select:focus,.filter-group input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:var(--radius-sm);border:1px solid var(--line-2);
+  background:#fff;font:inherit;font-size:12px;font-weight:500;color:var(--ink-0);cursor:pointer;transition:all .15s}
+.btn:hover{background:var(--bg-2);border-color:var(--ink-3)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{background:#094fa8;border-color:#094fa8}
+main.panel{padding:18px;min-height:60vh;overflow:hidden}
+.panel-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.panel-head h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.01em}
+.panel-head .sub{font-size:12.5px;color:var(--ink-2)}
+.metric-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.metric{padding:14px;border-radius:var(--radius);background:linear-gradient(135deg,#fff 0%,#fafbff 100%);border:1px solid var(--line)}
+.metric .lbl{font-size:11px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.06em}
+.metric .val{font-size:22px;font-weight:700;color:var(--ink-0);margin-top:4px;font-family:'JetBrains Mono',monospace}
+.metric .delta{font-size:11.5px;margin-top:3px}
+.delta.up{color:var(--ok)}.delta.dn{color:var(--bad)}.delta.eq{color:var(--ink-2)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{position:sticky;top:0;background:#f6f8fc;font-weight:600;color:var(--ink-1);text-align:left;
+  padding:9px 10px;border-bottom:2px solid var(--line-2);font-size:11.5px;letter-spacing:.02em;white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{background:var(--accent-soft);color:var(--accent)}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr{transition:background .12s}
+tbody tr:nth-child(even){background:#fafbfe}
+tbody tr:hover{background:var(--accent-soft);cursor:pointer}
+tbody tr.sel{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.tbl-wrap{max-height:calc(100vh - 330px);overflow:auto;border:1px solid var(--line);border-radius:var(--radius-sm)}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:600;letter-spacing:.02em}
+.b-ok{background:var(--ok-soft);color:var(--ok)}
+.b-warn{background:var(--warn-soft);color:var(--warn)}
+.b-bad{background:var(--bad-soft);color:var(--bad)}
+aside.detail{padding:16px;position:sticky;top:64px;align-self:flex-start;max-height:calc(100vh - 80px);overflow:auto}
+.detail h3{margin:0 0 4px;font-size:15px;font-weight:700}
+.detail .ident{font-size:11.5px;color:var(--ink-2);margin-bottom:14px}
+.detail .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.detail .kpi{background:var(--bg-2);padding:9px 10px;border-radius:var(--radius-sm)}
+.detail .kpi .l{font-size:10.5px;color:var(--ink-2);text-transform:uppercase;font-weight:600;letter-spacing:.05em}
+.detail .kpi .v{font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:2px}
+.chart-wrap{background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px;margin-bottom:12px;height:180px}
+.comp-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+.comp-table th,.comp-table td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right}
+.comp-table th:first-child,.comp-table td:first-child{text-align:left}
+.comp-table thead th{background:var(--bg-2);color:var(--ink-1);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.comp-table .diff-pos{color:var(--ok);font-weight:600}
+.comp-table .diff-neg{color:var(--bad);font-weight:600}
+.cohort-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.cohort-stats .cs{background:linear-gradient(135deg,#eef4ff 0%,#fff 100%);padding:10px;border-radius:var(--radius-sm);border:1px solid var(--line)}
+.cohort-stats .cs .l{font-size:10.5px;color:var(--ink-2);text-transform:uppercase;font-weight:600}
+.cohort-stats .cs .v{font-size:16px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:2px}
+.empty{padding:48px 24px;text-align:center;color:var(--ink-2);font-size:12.5px}
+.legend{display:flex;gap:14px;margin:8px 0 14px;font-size:11.5px;color:var(--ink-1);flex-wrap:wrap}
+.legend .sw{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="dot"></span> FDIC Insight Suite <small>/ Regulatory Comparison</small></div>
+  <nav class="nav">
+    <a href="index.html">Home</a>
+    <a href="semantic_layer.html">Semantic</a>
+    <a href="liquidity_monitor.html">Liquidity</a>
+    <a href="concentration_xray.html">Concentration</a>
+    <a href="cre_examiner.html">CRE</a>
+    <a href="peer_cohort.html">Peers</a>
+    <a href="early_warning.html">Early Warning</a>
+    <a href="stress_tester.html">Stress</a>
+    <a class="active" href="regulatory_comparison.html">Reg Compare</a>
+  </nav>
+  <div class="grow"></div>
+  <span class="pill" id="asOfPill">—</span>
+</header>
+
+<div class="wrap">
+  <aside class="filters">
+    <h3>Cohort Builder</h3>
+    <p class="hint">Select a benchmark bank, then define a peer cohort. The table ranks deviation against the cohort median on every regulatory ratio.</p>
+
+    <div class="filter-group">
+      <label>Quarter</label>
+      <select id="fQuarter"></select>
+    </div>
+
+    <div class="filter-group">
+      <label>Benchmark Bank</label>
+      <select id="fBenchmark"></select>
+    </div>
+
+    <div class="filter-group">
+      <label>Cohort — State</label>
+      <select id="fState"><option value="">All states</option></select>
+    </div>
+
+    <div class="filter-group">
+      <label>Cohort — Asset band</label>
+      <select id="fBand">
+        <option value="auto">Auto (±50% of benchmark)</option>
+        <option value="any">Any size</option>
+        <option value="lt1">Under $1B</option>
+        <option value="1to10">$1B – $10B</option>
+        <option value="10to50">$10B – $50B</option>
+        <option value="gt50">Over $50B</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Metric focus</label>
+      <select id="fFocus">
+        <option value="all">All ratios</option>
+        <option value="capital">Capital only</option>
+        <option value="liquidity">Liquidity only</option>
+        <option value="asset">Asset quality only</option>
+        <option value="earnings">Earnings only</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <button class="btn primary" id="refreshBtn">Refresh cohort</button>
+    </div>
+
+    <div class="filter-group">
+      <h3>Legend</h3>
+      <div class="legend">
+        <div><span class="sw" style="background:var(--ok)"></span>Better than peers</div>
+        <div><span class="sw" style="background:var(--warn)"></span>Near median</div>
+        <div><span class="sw" style="background:var(--bad)"></span>Worse than peers</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="panel">
+    <div class="panel-head">
+      <h1>Regulatory Peer Comparison</h1>
+      <span class="sub" id="cohortSummary">—</span>
+    </div>
+
+    <div class="cohort-stats" id="cohortStats"></div>
+    <div class="metric-row" id="metricRow"></div>
+
+    <div class="tbl-wrap">
+      <table id="mainTable">
+        <thead><tr>
+          <th data-k="metric">Regulatory Ratio</th>
+          <th data-k="cat">Category</th>
+          <th data-k="bench">Benchmark</th>
+          <th data-k="p25">Cohort p25</th>
+          <th data-k="med">Cohort Median</th>
+          <th data-k="p75">Cohort p75</th>
+          <th data-k="dev">Deviation</th>
+          <th data-k="grade">Assessment</th>
+        </tr></thead>
+        <tbody id="mainBody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <aside class="detail" id="detail">
+    <div class="empty">Select a row to see quarter-over-quarter detail and peer spread.</div>
+  </aside>
+</div>
+
+<script src="theme.js"></script>
+<script>
+const DATA_URL='data/liquidity_panel.json';
+const $=s=>document.querySelector(s);const $$=s=>document.querySelectorAll(s);
+const fmt=(v,d=2)=>v==null||isNaN(v)?'—':Number(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtB=v=>v==null||isNaN(v)?'—':v>=1e6?(v/1e6).toFixed(2)+'B':v>=1e3?(v/1e3).toFixed(1)+'M':(+v).toFixed(0)+'K';
+const pct=(v,d=2)=>v==null||isNaN(v)?'—':fmt(v,d)+'%';
+const last=a=>Array.isArray(a)&&a.length?a[a.length-1]:null;
+const median=a=>{a=a.filter(x=>x!=null&&!isNaN(x)).sort((x,y)=>x-y);if(!a.length)return null;const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2};
+const pctile=(a,p)=>{a=a.filter(x=>x!=null&&!isNaN(x)).sort((x,y)=>x-y);if(!a.length)return null;const i=Math.max(0,Math.min(a.length-1,Math.floor(p*(a.length-1))));return a[i]};
+
+const METRICS=[
+  {k:'RBCT1C',  label:'Tier 1 Leverage',          cat:'Capital',       dir:'up', fmt:v=>pct(v,2)},
+  {k:'RBC1RWAJ',label:'Tier 1 Risk-Based',        cat:'Capital',       dir:'up', fmt:v=>pct(v,2)},
+  {k:'RBCRWAJ', label:'Total Risk-Based',         cat:'Capital',       dir:'up', fmt:v=>pct(v,2)},
+  {k:'COREDEP', label:'Core Deposit Ratio',       cat:'Liquidity',     dir:'up', fmt:v=>pct(v,1)},
+  {k:'LNLSDEPR',label:'Loans / Deposits',         cat:'Liquidity',     dir:'down',fmt:v=>pct(v,1)},
+  {k:'NCOREQ1', label:'Noncore Funding',          cat:'Liquidity',     dir:'down',fmt:v=>pct(v,1)},
+  {k:'NPERFV',  label:'Nonperforming Ratio',      cat:'Asset Quality', dir:'down',fmt:v=>pct(v,2)},
+  {k:'LNRERT1R',label:'CRE / T1+ALL',              cat:'Concentration', dir:'down',fmt:v=>pct(v,0)},
+  {k:'LNCIT1R', label:'C&I / T1+ALL',              cat:'Concentration', dir:'down',fmt:v=>pct(v,0)},
+  {k:'LNCONT1R',label:'Construction / T1+ALL',    cat:'Concentration', dir:'down',fmt:v=>pct(v,0)},
+  {k:'ROAQ',    label:'Return on Assets',          cat:'Earnings',      dir:'up', fmt:v=>pct(v,2)},
+  {k:'NIMQY1',  label:'Net Interest Margin',       cat:'Earnings',      dir:'up', fmt:v=>pct(v,2)},
+  {k:'EEFFR',   label:'Efficiency Ratio',          cat:'Earnings',      dir:'down',fmt:v=>pct(v,1)}
+];
+
+let RAW=null, STATE={quarter:null, benchmark:null, state:'', band:'auto', focus:'all', rows:[], sortKey:'dev', sortDir:-1};
+
+async function load(){
+  const r=await fetch(DATA_URL);RAW=await r.json();
+  STATE.quarter=last(RAW.quarters);
+  const qSel=$('#fQuarter');RAW.quarters.forEach(q=>{const o=document.createElement('option');o.value=q;o.textContent=q;qSel.appendChild(o)});
+  qSel.value=STATE.quarter;
+  const benches=Object.entries(RAW.banks).map(([c,b])=>({c,n:b._meta&&b._meta.name||c,a:last(b.ASSET)||0}))
+     .sort((a,b)=>b.a-a.a);
+  const bSel=$('#fBenchmark');benches.slice(0,250).forEach(x=>{const o=document.createElement('option');o.value=x.c;o.textContent=`${x.n} — $${fmtB(x.a)}`;bSel.appendChild(o)});
+  STATE.benchmark=benches[0].c;bSel.value=STATE.benchmark;
+  const states=new Set();Object.values(RAW.banks).forEach(b=>{if(b._meta&&b._meta.state)states.add(b._meta.state)});
+  const stSel=$('#fState');[...states].sort().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;stSel.appendChild(o)});
+  qSel.addEventListener('change',()=>{STATE.quarter=qSel.value;run()});
+  bSel.addEventListener('change',()=>{STATE.benchmark=bSel.value;run()});
+  stSel.addEventListener('change',()=>{STATE.state=stSel.value;run()});
+  $('#fBand').addEventListener('change',e=>{STATE.band=e.target.value;run()});
+  $('#fFocus').addEventListener('change',e=>{STATE.focus=e.target.value;run()});
+  $('#refreshBtn').addEventListener('click',run);
+  $$('#mainTable thead th').forEach(th=>th.addEventListener('click',()=>{
+    const k=th.dataset.k;STATE.sortDir=(STATE.sortKey===k)?-STATE.sortDir:-1;STATE.sortKey=k;render()
+  }));
+  $('#asOfPill').textContent='Quarter: '+STATE.quarter;
+  run();
+}
+
+function qIdx(){return RAW.quarters.indexOf(STATE.quarter)}
+function metricValue(bank,key){const arr=bank[key];return Array.isArray(arr)?arr[qIdx()]:null}
+
+function buildCohort(){
+  const bench=RAW.banks[STATE.benchmark];const benchAsset=metricValue(bench,'ASSET')||0;
+  const bandFilter=(a)=>{
+    if(STATE.band==='any')return true;
+    if(STATE.band==='auto'){const lo=benchAsset*0.5,hi=benchAsset*1.5;return a>=lo&&a<=hi}
+    if(STATE.band==='lt1')return a<1e6;
+    if(STATE.band==='1to10')return a>=1e6&&a<1e7;
+    if(STATE.band==='10to50')return a>=1e7&&a<5e7;
+    if(STATE.band==='gt50')return a>=5e7;
+    return true;
+  };
+  const peers=[];
+  for(const[cert,b]of Object.entries(RAW.banks)){
+    if(cert===STATE.benchmark)continue;
+    if(STATE.state&&b._meta&&b._meta.state!==STATE.state)continue;
+    const a=metricValue(b,'ASSET');
+    if(a==null||!bandFilter(a))continue;
+    peers.push(b);
+  }
+  return peers;
+}
+
+function run(){
+  const bench=RAW.banks[STATE.benchmark];const peers=buildCohort();
+  const rows=[];
+  const cats=({capital:'Capital',liquidity:'Liquidity',asset:'Asset Quality',earnings:'Earnings'})[STATE.focus];
+  for(const m of METRICS){
+    if(STATE.focus!=='all'&&cats&&m.cat!==cats&&!(STATE.focus==='asset'&&m.cat==='Concentration'))continue;
+    const bv=metricValue(bench,m.k);
+    const vals=peers.map(p=>metricValue(p,m.k)).filter(v=>v!=null&&!isNaN(v));
+    const med=median(vals);const p25=pctile(vals,.25);const p75=pctile(vals,.75);
+    const dev=(bv!=null&&med!=null)?(bv-med):null;
+    let grade='neutral';
+    if(dev!=null){
+      const iqr=p75&&p25?Math.max(1e-9,p75-p25):null;
+      const z=iqr?dev/iqr:0;
+      const good=m.dir==='up'?z>.3:z<-.3;
+      const bad=m.dir==='up'?z<-.3:z>.3;
+      if(good)grade='ok';else if(bad)grade='bad';else grade='warn';
+    }
+    rows.push({metric:m.label,k:m.k,cat:m.cat,dir:m.dir,fmt:m.fmt,bench:bv,p25,med,p75,dev,grade,peerVals:vals});
+  }
+  STATE.rows=rows;STATE.peers=peers;
+  const meta=bench._meta||{};
+  $('#cohortSummary').textContent=`Benchmark: ${meta.name||STATE.benchmark} (${meta.state||'—'}) vs ${peers.length} peers`;
+  renderCohortStats();renderMetricRow();render();
+  // auto-select first bad row
+  const first=rows.find(r=>r.grade==='bad')||rows[0];if(first)select(first);
+}
+
+function renderCohortStats(){
+  const peers=STATE.peers;
+  const assets=peers.map(p=>metricValue(p,'ASSET')).filter(v=>v!=null);
+  const medAsset=median(assets);
+  const benchAsset=metricValue(RAW.banks[STATE.benchmark],'ASSET');
+  const medROA=median(peers.map(p=>metricValue(p,'ROAQ')).filter(v=>v!=null));
+  const el=$('#cohortStats');el.innerHTML=`
+    <div class="cs"><div class="l">Cohort Size</div><div class="v">${peers.length}</div></div>
+    <div class="cs"><div class="l">Median Assets</div><div class="v">$${fmtB(medAsset)}</div></div>
+    <div class="cs"><div class="l">Median ROA</div><div class="v">${pct(medROA,2)}</div></div>
+  `;
+  const bankAsset=benchAsset?`$${fmtB(benchAsset)}`:'—';
+  $('#asOfPill').textContent=`Benchmark: ${bankAsset} • ${STATE.quarter}`;
+}
+
+function renderMetricRow(){
+  const r=STATE.rows;const best=r.filter(x=>x.grade==='ok').length;const worst=r.filter(x=>x.grade==='bad').length;
+  const near=r.filter(x=>x.grade==='warn').length;
+  $('#metricRow').innerHTML=`
+    <div class="metric"><div class="lbl">Ratios Analyzed</div><div class="val">${r.length}</div><div class="delta eq">Across ${new Set(r.map(x=>x.cat)).size} categories</div></div>
+    <div class="metric"><div class="lbl">Outperform</div><div class="val" style="color:var(--ok)">${best}</div><div class="delta up">Better than cohort p50</div></div>
+    <div class="metric"><div class="lbl">Near Median</div><div class="val" style="color:var(--warn)">${near}</div><div class="delta eq">Within ±0.3 IQR</div></div>
+    <div class="metric"><div class="lbl">Underperform</div><div class="val" style="color:var(--bad)">${worst}</div><div class="delta dn">Lag cohort p50</div></div>
+  `;
+}
+
+function render(){
+  const s=STATE.sortKey,d=STATE.sortDir;
+  const rows=STATE.rows.slice().sort((a,b)=>{
+    const av=a[s],bv=b[s];
+    if(av==null)return 1;if(bv==null)return -1;
+    if(typeof av==='string')return av.localeCompare(bv)*d*-1;
+    return (av-bv)*d;
+  });
+  const body=$('#mainBody');body.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');tr.dataset.k=r.k;
+    const devDisp=r.dev==null?'—':(r.dir==='down'?(r.dev>0?'+':'')+r.fmt(r.dev).replace('%',''):(r.dev>0?'+':'')+r.fmt(r.dev).replace('%',''))+(r.fmt.toString().includes('pct')||r.fmt(0).includes('%')?'%':'');
+    const badgeClass=r.grade==='ok'?'b-ok':r.grade==='bad'?'b-bad':'b-warn';
+    const badgeTxt=r.grade==='ok'?'Outperform':r.grade==='bad'?'Underperform':'Near peers';
+    tr.innerHTML=`
+      <td><b>${r.metric}</b></td>
+      <td><span class="pill">${r.cat}</span></td>
+      <td class="mono">${r.fmt(r.bench)}</td>
+      <td class="mono" style="color:var(--ink-2)">${r.fmt(r.p25)}</td>
+      <td class="mono">${r.fmt(r.med)}</td>
+      <td class="mono" style="color:var(--ink-2)">${r.fmt(r.p75)}</td>
+      <td class="mono" style="color:${r.grade==='ok'?'var(--ok)':r.grade==='bad'?'var(--bad)':'var(--ink-1)'}">${devDisp}</td>
+      <td><span class="badge ${badgeClass}">${badgeTxt}</span></td>
+    `;
+    tr.addEventListener('click',()=>select(r));
+    body.appendChild(tr);
+  });
+}
+
+let lineChart=null;
+function select(row){
+  $$('#mainBody tr').forEach(t=>t.classList.toggle('sel',t.dataset.k===row.k));
+  const bench=RAW.banks[STATE.benchmark];const meta=bench._meta||{};
+  const qArr=RAW.quarters;const benchSeries=bench[row.k]||[];
+  const peerMedians=qArr.map((_,i)=>{const v=STATE.peers.map(p=>(p[row.k]||[])[i]).filter(x=>x!=null);return median(v)});
+  const peerP25=qArr.map((_,i)=>{const v=STATE.peers.map(p=>(p[row.k]||[])[i]).filter(x=>x!=null);return pctile(v,.25)});
+  const peerP75=qArr.map((_,i)=>{const v=STATE.peers.map(p=>(p[row.k]||[])[i]).filter(x=>x!=null);return pctile(v,.75)});
+
+  const el=$('#detail');el.innerHTML=`
+    <h3>${row.metric}</h3>
+    <div class="ident">${row.cat} • ${meta.name||STATE.benchmark} vs ${STATE.peers.length}-bank cohort</div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="l">Benchmark</div><div class="v">${row.fmt(row.bench)}</div></div>
+      <div class="kpi"><div class="l">Cohort Median</div><div class="v">${row.fmt(row.med)}</div></div>
+      <div class="kpi"><div class="l">Cohort p25</div><div class="v">${row.fmt(row.p25)}</div></div>
+      <div class="kpi"><div class="l">Cohort p75</div><div class="v">${row.fmt(row.p75)}</div></div>
+    </div>
+    <div class="chart-wrap"><canvas id="cmpChart"></canvas></div>
+    <table class="comp-table">
+      <thead><tr><th>Quarter</th><th>Bench</th><th>p50</th><th>Gap</th></tr></thead>
+      <tbody>
+        ${qArr.map((q,i)=>{
+          const bv=benchSeries[i],mv=peerMedians[i];
+          const g=(bv!=null&&mv!=null)?(bv-mv):null;
+          const sign=g==null?'':(row.dir==='up'?(g>0?'diff-pos':g<0?'diff-neg':''):(g<0?'diff-pos':g>0?'diff-neg':''));
+          return `<tr><td>${q}</td><td>${row.fmt(bv)}</td><td>${row.fmt(mv)}</td><td class="${sign}">${g==null?'—':(g>0?'+':'')+fmt(g,2)}</td></tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <div style="margin-top:14px"><a class="btn" href="bank_profile.html?cert=${STATE.benchmark}">Open full bank profile →</a></div>
+  `;
+  if(lineChart)lineChart.destroy();
+  const ctx=$('#cmpChart').getContext('2d');
+  lineChart=new Chart(ctx,{type:'line',data:{labels:qArr,datasets:[
+    {label:'Benchmark',data:benchSeries,borderColor:'#0b63d6',backgroundColor:'rgba(11,99,214,.15)',tension:.3,borderWidth:2.2,pointRadius:2.5,fill:false},
+    {label:'Cohort p50',data:peerMedians,borderColor:'#6a7690',borderDash:[4,4],tension:.3,borderWidth:1.6,pointRadius:0,fill:false},
+    {label:'Cohort p25',data:peerP25,borderColor:'rgba(198,37,51,.35)',borderDash:[2,3],tension:.3,borderWidth:1,pointRadius:0,fill:false},
+    {label:'Cohort p75',data:peerP75,borderColor:'rgba(14,138,79,.35)',borderDash:[2,3],tension:.3,borderWidth:1,pointRadius:0,fill:false}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:9,font:{size:10}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:10}}}}}});
+}
+
+load().catch(e=>{console.error(e);$('#mainBody').innerHTML=`<tr><td colspan="8" class="empty">Failed to load data: ${e.message}</td></tr>`});
+</script>
+</body>
+</html>
