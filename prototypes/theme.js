@@ -81,6 +81,58 @@
         '--coral':'#e36b78','--crimson':'#c8102e',
       }
     },
+    light: {
+      label: 'Clean White',
+      desc:  'Pure white — light grey cards, navy text, blue accents',
+      vars: {
+        '--bg-0':'#ffffff','--bg-1':'#f8f9fa','--bg-2':'#e9ecef',
+        '--surface':'rgba(255,255,255,.90)','--surface-2':'rgba(248,249,250,.95)','--surface-3':'rgba(233,236,239,.98)',
+        '--border':'rgba(33,37,41,.12)','--border-strong':'rgba(13,110,253,.30)',
+        '--text':'#212529','--text-dim':'#495057','--muted':'#6c757d',
+        '--accent':'#0d6efd','--accent-2':'#6610f2','--gold':'#ffc107',
+        '--teal':'#0dcaf0','--emerald':'#198754','--amber':'#ffc107',
+        '--coral':'#fd7e14','--crimson':'#dc3545',
+      }
+    },
+    lavender: {
+      label: 'Soft Lavender',
+      desc:  'Light purple background, white cards, violet accents',
+      vars: {
+        '--bg-0':'#f8f7fc','--bg-1':'#ffffff','--bg-2':'#ede8f5',
+        '--surface':'rgba(255,255,255,.92)','--surface-2':'rgba(237,232,245,.88)','--surface-3':'rgba(248,247,252,.97)',
+        '--border':'rgba(45,35,66,.12)','--border-strong':'rgba(124,58,237,.30)',
+        '--text':'#2d2342','--text-dim':'#5a4e7c','--muted':'#8b85a0',
+        '--accent':'#7c3aed','--accent-2':'#db2777','--gold':'#d97706',
+        '--teal':'#0891b2','--emerald':'#059669','--amber':'#d97706',
+        '--coral':'#ea580c','--crimson':'#dc2626',
+      }
+    },
+    mint: {
+      label: 'Mint Fresh',
+      desc:  'Light mint background, white cards, teal accents',
+      vars: {
+        '--bg-0':'#f0faf5','--bg-1':'#ffffff','--bg-2':'#d4edda',
+        '--surface':'rgba(255,255,255,.92)','--surface-2':'rgba(212,237,218,.88)','--surface-3':'rgba(240,250,245,.97)',
+        '--border':'rgba(26,60,42,.12)','--border-strong':'rgba(13,148,136,.30)',
+        '--text':'#1a3c2a','--text-dim':'#2d6a4f','--muted':'#6b8f7f',
+        '--accent':'#0d9488','--accent-2':'#0284c7','--gold':'#ca8a04',
+        '--teal':'#0d9488','--emerald':'#16a34a','--amber':'#ca8a04',
+        '--coral':'#ea580c','--crimson':'#dc2626',
+      }
+    },
+    sand: {
+      label: 'Warm Sand',
+      desc:  'Warm beige background, white cards, amber accents',
+      vars: {
+        '--bg-0':'#faf8f5','--bg-1':'#ffffff','--bg-2':'#f0ebe3',
+        '--surface':'rgba(255,255,255,.92)','--surface-2':'rgba(240,235,227,.88)','--surface-3':'rgba(250,248,245,.97)',
+        '--border':'rgba(61,48,41,.12)','--border-strong':'rgba(180,83,9,.30)',
+        '--text':'#3d3029','--text-dim':'#6b5344','--muted':'#8b7e6e',
+        '--accent':'#b45309','--accent-2':'#9f1239','--gold':'#b45309',
+        '--teal':'#0891b2','--emerald':'#15803d','--amber':'#d97706',
+        '--coral':'#dc2626','--crimson':'#be123c',
+      }
+    },
   };
 
   const KEY = 'fdic_theme';
