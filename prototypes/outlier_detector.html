@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FDIC Outlier Detector — Multi-Metric Anomaly Finder</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg-0:#f7f8fb; --bg-1:#ffffff; --bg-2:#f1f3f8;
+  --ink-0:#0b1a2b; --ink-1:#354358; --ink-2:#6a7690; --ink-3:#9aa3b9;
+  --line:#e3e7ef; --line-2:#ced4e0;
+  --accent:#0b63d6; --accent-2:#1b84ff; --accent-soft:#e8f1ff;
+  --ok:#0e8a4f; --ok-soft:#e3f6ec;
+  --warn:#b5730a; --warn-soft:#fff4e0;
+  --bad:#c62533; --bad-soft:#fde6e8;
+  --violet:#5f4bd4; --violet-soft:#ece8ff;
+  --shadow:0 1px 2px rgba(10,24,46,.04), 0 4px 14px rgba(10,24,46,.06);
+  --shadow-lg:0 6px 28px rgba(10,24,46,.12);
+  --radius:12px; --radius-sm:8px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg-0);color:var(--ink-0);
+  font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:13.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.mono{font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.topbar{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,#fff 0%,#fbfcfe 100%);
+  border-bottom:1px solid var(--line);padding:10px 22px;display:flex;align-items:center;gap:18px;box-shadow:var(--shadow)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700}
+.brand .dot{width:10px;height:10px;border-radius:2px;background:linear-gradient(135deg,var(--accent),var(--violet))}
+.brand small{font-weight:500;color:var(--ink-2);margin-left:6px}
+.nav{display:flex;gap:4px;margin-left:16px;flex-wrap:wrap}
+.nav a{padding:7px 12px;border-radius:8px;color:var(--ink-1);font-weight:500;font-size:12.5px;transition:all .2s ease}
+.nav a:hover{background:var(--accent-soft);color:var(--accent);text-decoration:none}
+.nav a.active{background:var(--ink-0);color:#fff}
+.grow{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+  background:var(--bg-2);color:var(--ink-1);font-size:11.5px;font-weight:500;border:1px solid var(--line)}
+.wrap{display:grid;grid-template-columns:270px 1fr 420px;gap:18px;padding:18px 22px;max-width:1700px;margin:0 auto;animation:fadein .3s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+aside.filters,main.panel,aside.detail{background:var(--bg-1);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+aside.filters{padding:16px;position:sticky;top:64px;align-self:flex-start;max-height:calc(100vh - 80px);overflow:auto}
+.filters h3{margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.filters p.hint{margin:0 0 14px;font-size:11.5px;color:var(--ink-2);line-height:1.5}
+.filter-group{margin-bottom:16px;padding-bottom:16px;border-bottom:1px dashed var(--line)}
+.filter-group:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.filter-group label{display:block;font-size:11.5px;font-weight:600;color:var(--ink-1);margin-bottom:6px}
+.filter-group select,.filter-group input{width:100%;padding:7px 9px;border:1px solid var(--line-2);border-radius:var(--radius-sm);
+  background:#fff;font:inherit;font-size:12.5px;color:var(--ink-0)}
+.filter-group select:focus,.filter-group input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.slider-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.slider-row input[type=range]{flex:1}
+.slider-row .v{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--accent);font-weight:600;min-width:34px;text-align:right}
+.check{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;cursor:pointer;padding:4px 6px;border-radius:6px;transition:background .1s}
+.check:hover{background:var(--bg-2)}
+.check input[type=checkbox]{margin:0;accent-color:var(--accent)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:var(--radius-sm);border:1px solid var(--line-2);
+  background:#fff;font:inherit;font-size:12px;font-weight:500;color:var(--ink-0);cursor:pointer;transition:all .15s}
+.btn:hover{background:var(--bg-2);border-color:var(--ink-3)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.primary:hover{background:#094fa8}
+main.panel{padding:18px;min-height:60vh;overflow:hidden}
+.panel-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.panel-head h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.01em}
+.panel-head .sub{font-size:12.5px;color:var(--ink-2)}
+.metric-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.metric{padding:14px;border-radius:var(--radius);background:linear-gradient(135deg,#fff 0%,#fafbff 100%);border:1px solid var(--line)}
+.metric .lbl{font-size:11px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.06em}
+.metric .val{font-size:22px;font-weight:700;color:var(--ink-0);margin-top:4px;font-family:'JetBrains Mono',monospace}
+.metric .delta{font-size:11.5px;margin-top:3px;color:var(--ink-2)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{position:sticky;top:0;background:#f6f8fc;font-weight:600;color:var(--ink-1);text-align:left;
+  padding:9px 10px;border-bottom:2px solid var(--line-2);font-size:11.5px;letter-spacing:.02em;white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{background:var(--accent-soft);color:var(--accent)}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr{transition:background .12s}
+tbody tr:nth-child(even){background:#fafbfe}
+tbody tr:hover{background:var(--accent-soft);cursor:pointer}
+tbody tr.sel{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.tbl-wrap{max-height:calc(100vh - 340px);overflow:auto;border:1px solid var(--line);border-radius:var(--radius-sm)}
+.score-bar{display:inline-block;width:70px;height:7px;background:var(--bg-2);border-radius:4px;overflow:hidden;vertical-align:middle;margin-right:7px}
+.score-bar>span{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent) 0%,var(--violet) 100%)}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:600;letter-spacing:.02em}
+.b-ok{background:var(--ok-soft);color:var(--ok)}
+.b-warn{background:var(--warn-soft);color:var(--warn)}
+.b-bad{background:var(--bad-soft);color:var(--bad)}
+.b-extreme{background:#2b0c14;color:#fff}
+aside.detail{padding:16px;position:sticky;top:64px;align-self:flex-start;max-height:calc(100vh - 80px);overflow:auto}
+.detail h3{margin:0 0 4px;font-size:15px;font-weight:700}
+.detail .ident{font-size:11.5px;color:var(--ink-2);margin-bottom:14px}
+.detail .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.detail .kpi{background:var(--bg-2);padding:9px 10px;border-radius:var(--radius-sm)}
+.detail .kpi .l{font-size:10.5px;color:var(--ink-2);text-transform:uppercase;font-weight:600;letter-spacing:.05em}
+.detail .kpi .v{font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:2px}
+.chart-wrap{background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px;margin-bottom:12px;height:170px}
+.z-list{margin-top:10px}
+.z-item{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-bottom:1px dotted var(--line);font-size:12px}
+.z-item:last-child{border-bottom:none}
+.z-item .nm{color:var(--ink-0);font-weight:500}
+.z-item .z{font-family:'JetBrains Mono',monospace;font-weight:600}
+.z-item .z.hi{color:var(--bad)}
+.z-item .z.md{color:var(--warn)}
+.z-item .z.lo{color:var(--ink-2)}
+.empty{padding:48px 24px;text-align:center;color:var(--ink-2);font-size:12.5px}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="dot"></span> FDIC Insight Suite <small>/ Outlier Detector</small></div>
+  <nav class="nav">
+    <a href="index.html">Home</a>
+    <a href="semantic_layer.html">Semantic</a>
+    <a href="liquidity_monitor.html">Liquidity</a>
+    <a href="concentration_xray.html">Concentration</a>
+    <a href="peer_cohort.html">Peers</a>
+    <a href="early_warning.html">Early Warning</a>
+    <a href="stress_tester.html">Stress</a>
+    <a href="regulatory_comparison.html">Reg Compare</a>
+    <a class="active" href="outlier_detector.html">Outliers</a>
+  </nav>
+  <div class="grow"></div>
+  <span class="pill" id="asOfPill">—</span>
+</header>
+
+<div class="wrap">
+  <aside class="filters">
+    <h3>Detector Settings</h3>
+    <p class="hint">Flags banks whose z-scores exceed the threshold on one or more selected metrics. Peer group is asset-band.</p>
+
+    <div class="filter-group">
+      <label>Quarter</label>
+      <select id="fQuarter"></select>
+    </div>
+
+    <div class="filter-group">
+      <label>Peer group</label>
+      <select id="fBand">
+        <option value="all">All banks</option>
+        <option value="lt1">Under $1B</option>
+        <option value="1to10">$1B – $10B</option>
+        <option value="10to50">$10B – $50B</option>
+        <option value="gt50">Over $50B</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Z-score threshold <span id="zLbl" style="color:var(--accent);font-family:monospace">2.0</span></label>
+      <div class="slider-row">
+        <input type="range" id="fZ" min="1" max="4" step="0.1" value="2">
+      </div>
+      <p class="hint" style="margin:0;font-size:11px">Banks with any |z| above this flag as outliers.</p>
+    </div>
+
+    <div class="filter-group">
+      <label>Min flags per bank <span id="minLbl" style="color:var(--accent);font-family:monospace">1</span></label>
+      <div class="slider-row">
+        <input type="range" id="fMin" min="1" max="6" step="1" value="1">
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label>Metrics</label>
+      <div id="metList"></div>
+    </div>
+
+    <div class="filter-group">
+      <button class="btn primary" id="refreshBtn">Refresh scan</button>
+    </div>
+  </aside>
+
+  <main class="panel">
+    <div class="panel-head">
+      <h1>Multi-Metric Outlier Detector</h1>
+      <span class="sub" id="subline">—</span>
+    </div>
+    <div class="metric-row" id="metricRow"></div>
+
+    <div class="tbl-wrap">
+      <table id="mainTable">
+        <thead><tr>
+          <th data-k="name">Bank</th>
+          <th data-k="state">State</th>
+          <th data-k="asset">Assets ($M)</th>
+          <th data-k="flags">Flags</th>
+          <th data-k="maxz">Max |z|</th>
+          <th data-k="score">Severity</th>
+          <th data-k="top">Primary Driver</th>
+          <th data-k="grade">Status</th>
+        </tr></thead>
+        <tbody id="mainBody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <aside class="detail" id="detail">
+    <div class="empty">Select a flagged bank to see its z-score contributions and 8-quarter history.</div>
+  </aside>
+</div>
+
+<script src="theme.js"></script>
+<script>
+const DATA_URL='data/liquidity_panel.json';
+const $=s=>document.querySelector(s);const $$=s=>document.querySelectorAll(s);
+const fmt=(v,d=2)=>v==null||isNaN(v)?'—':Number(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtB=v=>v==null||isNaN(v)?'—':v>=1e6?(v/1e6).toFixed(2)+'B':v>=1e3?(v/1e3).toFixed(1)+'M':(+v).toFixed(0)+'K';
+const last=a=>Array.isArray(a)&&a.length?a[a.length-1]:null;
+const mean=a=>{a=a.filter(x=>x!=null&&!isNaN(x));return a.length?a.reduce((p,c)=>p+c,0)/a.length:null};
+const stdv=a=>{a=a.filter(x=>x!=null&&!isNaN(x));if(a.length<2)return 0;const m=mean(a);return Math.sqrt(a.reduce((p,c)=>p+(c-m)*(c-m),0)/(a.length-1))};
+
+const METRICS=[
+  {k:'NPERFV',  lbl:'Nonperforming',   dir:'up',   fmt:v=>fmt(v,2)+'%'},
+  {k:'LNLSDEPR',lbl:'Loans/Deposits',  dir:'up',   fmt:v=>fmt(v,1)+'%'},
+  {k:'NCOREQ1', lbl:'Noncore Funding', dir:'up',   fmt:v=>fmt(v,1)+'%'},
+  {k:'COREDEP', lbl:'Core Deposits',   dir:'down', fmt:v=>fmt(v,1)+'%'},
+  {k:'ROAQ',    lbl:'Return on Assets',dir:'down', fmt:v=>fmt(v,2)+'%'},
+  {k:'NIMQY1',  lbl:'Net Interest Margin', dir:'down', fmt:v=>fmt(v,2)+'%'},
+  {k:'EEFFR',   lbl:'Efficiency Ratio',dir:'up',   fmt:v=>fmt(v,1)+'%'},
+  {k:'LNRERT1R',lbl:'CRE / T1+ALL',    dir:'up',   fmt:v=>fmt(v,0)+'%'},
+  {k:'LNCONT1R',lbl:'Construction / T1',dir:'up',  fmt:v=>fmt(v,0)+'%'},
+  {k:'RBCT1C',  lbl:'Tier 1 Leverage', dir:'down', fmt:v=>fmt(v,2)+'%'}
+];
+
+let RAW=null, STATE={quarter:null,band:'all',z:2,min:1,enabled:new Set(METRICS.map(m=>m.k)),rows:[],sortKey:'score',sortDir:-1};
+
+async function load(){
+  const r=await fetch(DATA_URL);RAW=await r.json();
+  STATE.quarter=last(RAW.quarters);
+  const qSel=$('#fQuarter');RAW.quarters.forEach(q=>{const o=document.createElement('option');o.value=q;o.textContent=q;qSel.appendChild(o)});
+  qSel.value=STATE.quarter;
+  qSel.addEventListener('change',()=>{STATE.quarter=qSel.value;run()});
+  $('#fBand').addEventListener('change',e=>{STATE.band=e.target.value;run()});
+  $('#fZ').addEventListener('input',e=>{STATE.z=+e.target.value;$('#zLbl').textContent=STATE.z.toFixed(1)});
+  $('#fZ').addEventListener('change',run);
+  $('#fMin').addEventListener('input',e=>{STATE.min=+e.target.value;$('#minLbl').textContent=STATE.min});
+  $('#fMin').addEventListener('change',run);
+  $('#refreshBtn').addEventListener('click',run);
+
+  const ml=$('#metList');METRICS.forEach(m=>{
+    const l=document.createElement('label');l.className='check';
+    l.innerHTML=`<input type="checkbox" data-k="${m.k}" checked><span>${m.lbl}</span>`;
+    ml.appendChild(l);
+  });
+  ml.addEventListener('change',e=>{
+    const k=e.target.dataset.k;if(!k)return;
+    if(e.target.checked)STATE.enabled.add(k);else STATE.enabled.delete(k);
+    run();
+  });
+  $$('#mainTable thead th').forEach(th=>th.addEventListener('click',()=>{
+    const k=th.dataset.k;STATE.sortDir=(STATE.sortKey===k)?-STATE.sortDir:-1;STATE.sortKey=k;render()
+  }));
+  $('#asOfPill').textContent='Quarter: '+STATE.quarter;
+  run();
+}
+
+function qIdx(){return RAW.quarters.indexOf(STATE.quarter)}
+function mv(bank,key){const a=bank[key];return Array.isArray(a)?a[qIdx()]:null}
+function inBand(a){
+  if(STATE.band==='all')return true;
+  if(STATE.band==='lt1')return a<1e6;
+  if(STATE.band==='1to10')return a>=1e6&&a<1e7;
+  if(STATE.band==='10to50')return a>=1e7&&a<5e7;
+  if(STATE.band==='gt50')return a>=5e7;
+  return true;
+}
+
+function run(){
+  const ents=Object.entries(RAW.banks).map(([c,b])=>({c,b,a:mv(b,'ASSET')||0})).filter(x=>inBand(x.a));
+  // compute peer mean/std for each metric
+  const stats={};
+  for(const m of METRICS){
+    const vals=ents.map(x=>mv(x.b,m.k)).filter(v=>v!=null&&!isNaN(v));
+    stats[m.k]={mean:mean(vals),std:stdv(vals)};
+  }
+  const rows=[];
+  for(const {c,b,a} of ents){
+    const meta=b._meta||{};const zs=[];
+    for(const m of METRICS){
+      if(!STATE.enabled.has(m.k))continue;
+      const v=mv(b,m.k);if(v==null||isNaN(v))continue;
+      const {mean:mu,std:sd}=stats[m.k];if(!sd)continue;
+      let z=(v-mu)/sd;
+      // dir='up' means high is risky; dir='down' means low is risky → invert
+      if(m.dir==='down')z=-z;
+      zs.push({k:m.k,lbl:m.lbl,val:v,z:z,fmt:m.fmt,dir:m.dir});
+    }
+    const flags=zs.filter(x=>Math.abs(x.z)>=STATE.z&&x.z>0);
+    const maxz=zs.reduce((mx,x)=>x.z>mx?x.z:mx,-Infinity);
+    const score=flags.reduce((p,c)=>p+c.z*c.z,0);
+    if(flags.length<STATE.min)continue;
+    const top=flags.slice().sort((a,b)=>b.z-a.z)[0];
+    let grade='warn';if(maxz>=3)grade='extreme';else if(maxz>=2.5)grade='bad';else if(maxz>=2)grade='warn';else grade='ok';
+    rows.push({cert:c,name:meta.name||c,state:meta.state||'',asset:a,flags:flags.length,maxz,score,top:top&&top.lbl,zs,grade});
+  }
+  STATE.rows=rows;
+  $('#subline').textContent=`${rows.length} outliers • threshold z≥${STATE.z} • ${STATE.enabled.size} metrics active`;
+  renderMetricRow();render();
+  if(rows.length)select(rows.slice().sort((a,b)=>b.score-a.score)[0]);
+  else $('#detail').innerHTML='<div class="empty">No banks cross the current threshold.</div>';
+}
+
+function renderMetricRow(){
+  const r=STATE.rows;
+  const extreme=r.filter(x=>x.grade==='extreme').length;
+  const bad=r.filter(x=>x.grade==='bad').length;
+  const totalFlags=r.reduce((p,c)=>p+c.flags,0);
+  const medFlags=r.length?(totalFlags/r.length).toFixed(1):'—';
+  $('#metricRow').innerHTML=`
+    <div class="metric"><div class="lbl">Flagged Banks</div><div class="val">${r.length}</div><div class="delta">Of ${Object.keys(RAW.banks).length} total</div></div>
+    <div class="metric"><div class="lbl">Extreme (z≥3)</div><div class="val" style="color:var(--bad)">${extreme}</div><div class="delta">Tail-risk candidates</div></div>
+    <div class="metric"><div class="lbl">High (z≥2.5)</div><div class="val" style="color:var(--warn)">${bad}</div><div class="delta">Elevated scrutiny</div></div>
+    <div class="metric"><div class="lbl">Avg Flags / Bank</div><div class="val">${medFlags}</div><div class="delta">Breadth of deviation</div></div>
+  `;
+}
+
+function render(){
+  const s=STATE.sortKey,d=STATE.sortDir;
+  const rows=STATE.rows.slice().sort((a,b)=>{
+    const av=a[s],bv=b[s];
+    if(av==null)return 1;if(bv==null)return -1;
+    if(typeof av==='string')return av.localeCompare(bv)*d*-1;
+    return (av-bv)*d;
+  });
+  const maxScore=Math.max(1,...rows.map(r=>r.score));
+  const body=$('#mainBody');body.innerHTML='';
+  rows.slice(0,500).forEach(r=>{
+    const tr=document.createElement('tr');tr.dataset.c=r.cert;
+    const cls=r.grade==='extreme'?'b-extreme':r.grade==='bad'?'b-bad':r.grade==='warn'?'b-warn':'b-ok';
+    const lbl=r.grade==='extreme'?'Extreme':r.grade==='bad'?'High':r.grade==='warn'?'Moderate':'Mild';
+    tr.innerHTML=`
+      <td><b>${r.name}</b></td>
+      <td>${r.state}</td>
+      <td class="mono">${fmtB(r.asset)}</td>
+      <td class="mono" style="color:${r.flags>=3?'var(--bad)':'var(--ink-0)'}">${r.flags}</td>
+      <td class="mono">${r.maxz.toFixed(2)}</td>
+      <td><span class="score-bar"><span style="width:${Math.min(100,100*r.score/maxScore).toFixed(0)}%"></span></span><span class="mono" style="font-size:11.5px">${r.score.toFixed(1)}</span></td>
+      <td style="color:var(--ink-1)">${r.top||'—'}</td>
+      <td><span class="badge ${cls}">${lbl}</span></td>
+    `;
+    tr.addEventListener('click',()=>select(r));
+    body.appendChild(tr);
+  });
+}
+
+let lineChart=null;
+function select(row){
+  $$('#mainBody tr').forEach(t=>t.classList.toggle('sel',t.dataset.c===row.cert));
+  const bank=RAW.banks[row.cert];const meta=bank._meta||{};
+  const flagsSorted=row.zs.slice().sort((a,b)=>b.z-a.z);
+  const topMetric=flagsSorted[0];
+  const qArr=RAW.quarters;const series=topMetric?(bank[topMetric.k]||[]):[];
+
+  const el=$('#detail');el.innerHTML=`
+    <h3>${row.name}</h3>
+    <div class="ident">CERT ${row.cert} • ${meta.city||''} ${meta.state||''} • $${fmtB(row.asset)}</div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="l">Flags</div><div class="v">${row.flags}</div></div>
+      <div class="kpi"><div class="l">Max |z|</div><div class="v">${row.maxz.toFixed(2)}</div></div>
+      <div class="kpi"><div class="l">Severity</div><div class="v">${row.score.toFixed(1)}</div></div>
+      <div class="kpi"><div class="l">Status</div><div class="v">${row.grade}</div></div>
+    </div>
+    <div class="chart-wrap"><canvas id="histChart"></canvas></div>
+    <div style="font-size:11.5px;color:var(--ink-2);margin:8px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Z-Score Contributions</div>
+    <div class="z-list">
+      ${flagsSorted.map(f=>{
+        const absz=Math.abs(f.z);const cls=absz>=3?'hi':absz>=2?'md':'lo';
+        return `<div class="z-item"><span class="nm">${f.lbl}<br><span style="color:var(--ink-2);font-size:11px">${f.fmt(f.val)}</span></span><span class="z ${cls}">${f.z>=0?'+':''}${f.z.toFixed(2)}σ</span></div>`;
+      }).join('')}
+    </div>
+    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <a class="btn" href="bank_profile.html?cert=${row.cert}">Bank profile →</a>
+      <a class="btn" href="regulatory_comparison.html">Reg compare →</a>
+    </div>
+  `;
+  if(lineChart)lineChart.destroy();
+  if(topMetric){
+    const ctx=$('#histChart').getContext('2d');
+    lineChart=new Chart(ctx,{type:'line',data:{labels:qArr,datasets:[{
+      label:topMetric.lbl,data:series,borderColor:'#c62533',backgroundColor:'rgba(198,37,51,.15)',tension:.3,borderWidth:2.2,pointRadius:3,fill:true
+    }]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:9,font:{size:10}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:10}}}}}});
+  }
+}
+
+load().catch(e=>{console.error(e);$('#mainBody').innerHTML=`<tr><td colspan="8" class="empty">Failed to load data: ${e.message}</td></tr>`});
+</script>
+</body>
+</html>
