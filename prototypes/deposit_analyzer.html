@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Deposit Analyzer · FDIC Insight Suite</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{--bg-0:#05070f;--surface:rgba(20,28,52,.62);--surface-3:rgba(11,16,34,.85);
+    --border:rgba(120,148,210,.16);--border-strong:rgba(140,170,230,.32);
+    --text:#e8edf7;--text-dim:#a4b0cf;--muted:#6f7d9e;--accent:#5cc8ff;--accent-2:#9d7cff;
+    --gold:#f0c674;--emerald:#34d399;--amber:#fbbf24;--coral:#fb7185;--crimson:#ef4444;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg-0);color:var(--text);font-family:'Inter',sans-serif;font-size:13.5px;line-height:1.55;overflow:hidden;-webkit-font-smoothing:antialiased;animation:fade .45s ease-out}
+  @keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+  .bg-mesh{position:fixed;inset:0;z-index:-2;background:
+    radial-gradient(ellipse 60% 50% at 0% 100%,rgba(34,211,238,.08),transparent 60%),
+    radial-gradient(ellipse 60% 40% at 100% 0%,rgba(92,200,255,.08),transparent 60%),var(--bg-0)}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);height:62px;background:linear-gradient(180deg,rgba(8,12,28,.88),rgba(8,12,28,.55));backdrop-filter:blur(14px)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:28px;height:28px;border-radius:7px;background:conic-gradient(from 220deg,var(--accent),var(--accent-2),var(--gold),var(--accent));box-shadow:0 0 16px rgba(92,200,255,.35),inset 0 0 0 1px rgba(255,255,255,.1);position:relative}
+  .brand-mark::after{content:'';position:absolute;inset:4px;border-radius:4px;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.25),transparent 60%),var(--bg-0)}
+  .brand-text{display:flex;flex-direction:column;line-height:1.1}
+  .brand-text .nm{font-weight:700;font-size:13px;letter-spacing:-.01em}
+  .brand-text .sub{font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
+  .topbar a.back{color:var(--text-dim);text-decoration:none;font-size:12.5px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);font-family:'JetBrains Mono',monospace;transition:.2s}
+  .topbar a.back:hover{color:var(--accent);border-color:var(--border-strong)}
+  .topbar-right{display:flex;align-items:center;gap:18px;font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+  .topbar-right .badge-app{padding:3px 10px;border-radius:5px;background:rgba(34,211,238,.12);color:var(--teal,#22d3ee);border:1px solid rgba(34,211,238,.3);font-weight:600}
+
+  .container{display:grid;grid-template-columns:280px 1fr 460px;height:calc(100vh - 62px)}
+  aside{border-right:1px solid var(--border);background:var(--surface-3);overflow-y:auto;padding:22px 20px}
+  aside h2{font-size:10.5px;text-transform:uppercase;color:var(--muted);letter-spacing:.14em;margin:0 0 10px;font-weight:600}
+  aside .group{margin-bottom:20px}
+  aside select{width:100%;background:rgba(5,7,15,.65);border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:12.5px;outline:0;font-family:inherit}
+  aside select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(92,200,255,.12)}
+  .slider-row{display:flex;align-items:center;gap:10px}
+  .slider-row input[type=range]{flex:1;accent-color:var(--accent)}
+  .slider-row .v{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--accent);min-width:68px;text-align:right;font-variant-numeric:tabular-nums}
+  .help{font-size:11.5px;color:var(--muted);line-height:1.6;padding:12px 14px;background:rgba(15,21,43,.55);border-radius:8px;border:1px solid var(--border);margin-top:6px}
+  .help b{color:var(--text-dim);font-weight:500}
+
+  main{overflow-y:auto;padding:22px 26px}
+  .stat-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .stat{background:var(--surface);border:1px solid var(--border);padding:16px 18px;border-radius:12px;backdrop-filter:blur(12px);box-shadow:0 2px 12px rgba(0,0,0,.16)}
+  .stat .l{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;font-weight:600}
+  .stat .v{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;margin-top:6px;letter-spacing:-.02em;background:linear-gradient(180deg,#fff,#a8b8d8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .v.bad{background:linear-gradient(180deg,#fda4af,#ef4444);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .v.warn{background:linear-gradient(180deg,#fde68a,#f59e0b);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .stat .delta{font-size:11.5px;color:var(--muted);margin-top:5px;font-family:'JetBrains Mono',monospace}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:14px;backdrop-filter:blur(12px);box-shadow:0 2px 14px rgba(0,0,0,.18)}
+  .panel-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .panel-head h3{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--text-dim);font-weight:600}
+  .search-input{background:rgba(5,7,15,.65);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:12px;width:240px;outline:0;font-family:inherit}
+  .tbl-scroll{overflow:auto;max-height:calc(100vh - 300px)}
+  table{width:100%;border-collapse:collapse}
+  thead{position:sticky;top:0;z-index:1}
+  th{font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:.1em;text-align:left;padding:12px 12px;font-weight:600;background:rgba(11,16,34,.96);border-bottom:1px solid var(--border);cursor:pointer}
+  th.num{text-align:right} th:hover{color:var(--accent)}
+  td{padding:9px 12px;border-bottom:1px solid rgba(120,148,210,.06);font-size:12.5px}
+  tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  td.num{text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+  td.bank{font-weight:500}
+  tr{cursor:pointer;transition:background .15s}
+  tr:hover td{background:rgba(34,211,238,.05)}
+  tr.selected td{background:rgba(34,211,238,.08);box-shadow:inset 3px 0 0 var(--teal,#22d3ee)}
+  .composition{display:flex;height:18px;border-radius:4px;overflow:hidden;border:1px solid var(--border);width:160px}
+  .composition span{display:block;height:100%}
+
+  #detail{border-left:1px solid var(--border);background:var(--surface-3);overflow-y:auto;padding:22px 24px}
+  .placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:var(--muted);font-size:13px;padding:0 30px;line-height:1.65}
+  .placeholder .icon{font-size:36px;margin-bottom:14px;opacity:.4}
+  #detail h3.bn{margin:0 0 4px;font-size:18px;font-weight:700;letter-spacing:-.01em}
+  #detail .sub{color:var(--muted);font-size:11.5px;margin-bottom:16px;font-family:'JetBrains Mono',monospace}
+  .section-lbl{margin-top:18px;font-size:10.5px;text-transform:uppercase;color:var(--text-dim);letter-spacing:.14em;font-weight:600;margin-bottom:8px}
+  .kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .kv{background:rgba(11,16,34,.6);border:1px solid var(--border);border-radius:9px;padding:11px 13px}
+  .kv .l{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:3px}
+  .kv .v{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:600}
+  #detail canvas{margin:6px 0 12px;max-height:200px}
+  .err{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.35);color:#fca5a5;padding:14px 18px;border-radius:10px;margin-bottom:14px;font-size:13px}
+  .err code{background:rgba(5,7,15,.5);border:1px solid var(--border);padding:2px 7px;border-radius:4px;font-size:12px;font-family:'JetBrains Mono',monospace}
+  aside::-webkit-scrollbar,main::-webkit-scrollbar,#detail::-webkit-scrollbar,.tbl-scroll::-webkit-scrollbar{width:8px;height:8px}
+  aside::-webkit-scrollbar-thumb,main::-webkit-scrollbar-thumb,#detail::-webkit-scrollbar-thumb,.tbl-scroll::-webkit-scrollbar-thumb{background:rgba(140,170,230,.18);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div class="brand-text">
+      <div class="nm">FDIC Insight Suite</div>
+      <div class="sub">Deposit Analyzer · App #11</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="badge-app">FUNDING</span>
+    <span id="meta">Loading…</span>
+    <a class="back" href="index.html">← Suite</a>
+  </div>
+</div>
+
+<div class="container">
+  <aside>
+    <div class="group"><h2>As-of quarter</h2><select id="qtr"></select></div>
+    <div class="group"><h2>State</h2><select id="state"><option value="">All states</option></select></div>
+    <div class="group">
+      <h2>Min assets ($M)</h2>
+      <div class="slider-row"><input id="minAsset" type="range" min="0" max="5000" value="100" step="50"><div class="v" id="minAssetV">100</div></div>
+    </div>
+    <div class="group">
+      <h2>Uninsured threshold (%)</h2>
+      <div class="slider-row"><input id="unThr" type="range" min="10" max="80" value="40" step="5"><div class="v" id="unThrV">40</div></div>
+    </div>
+    <div class="group">
+      <h2>Noncore threshold (%)</h2>
+      <div class="slider-row"><input id="ncThr" type="range" min="10" max="60" value="25" step="5"><div class="v" id="ncThrV">25</div></div>
+    </div>
+    <div class="help">
+      <b>Deposit composition x-ray:</b><br>
+      Decomposes each bank's deposit book into core / large-depositor / insured / uninsured / noncore slices and flags outliers. Complements the Liquidity Monitor for institutions with concentrated funding bases.<br><br>
+      Derived from COREDEP, DEPLGAMT, DEPINS, DEPI, DEPNI and the noncore funding ratio NCOREQ1.
+    </div>
+  </aside>
+
+  <main>
+    <div id="errBox"></div>
+    <div class="stat-bar">
+      <div class="stat"><div class="l">Banks analyzed</div><div class="v" id="kBanks">—</div><div class="delta" id="kDelta">&nbsp;</div></div>
+      <div class="stat"><div class="l">Uninsured &gt; threshold</div><div class="v warn" id="kUn">—</div><div class="delta">concentrated funding</div></div>
+      <div class="stat"><div class="l">Noncore &gt; threshold</div><div class="v warn" id="kNc">—</div><div class="delta">wholesale reliance</div></div>
+      <div class="stat"><div class="l">Both flags breached</div><div class="v bad" id="kBoth">—</div><div class="delta">dual-risk watchlist</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Deposit composition ranking</h3>
+        <input id="searchBank" type="text" class="search-input" placeholder="Search by name or CERT…" />
+      </div>
+      <div class="tbl-scroll">
+        <table id="rank">
+          <thead><tr>
+            <th data-sort="name">Bank</th>
+            <th>State</th>
+            <th class="num" data-sort="asset">Assets ($M)</th>
+            <th class="num" data-sort="dep">Deposits ($M)</th>
+            <th>Mix</th>
+            <th class="num" data-sort="coreP">Core (%)</th>
+            <th class="num" data-sort="lgP">Large dep (%)</th>
+            <th class="num" data-sort="unP">Uninsured (%)</th>
+            <th class="num" data-sort="ncP">Noncore (%)</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div id="detail">
+    <div class="placeholder">
+      <div class="icon">⌘</div>
+      Pick a bank for deposit mix, volatility, and 8-quarter trends.
+    </div>
+  </div>
+</div>
+
+<script>
+let PANEL=null,sortKey='unP',sortDir='desc';
+const QTR_DEFAULT=7;
+Chart.defaults.color='#a4b0cf';Chart.defaults.font.family="'Inter',sans-serif";Chart.defaults.font.size=10.5;
+
+async function loadData(){
+  PANEL=await fetch('./data/liquidity_panel.json').then(r=>r.json());
+  const states=new Set();
+  for(const c in PANEL.banks){const s=PANEL.banks[c]._meta?.state;if(s)states.add(s)}
+  const stSel=document.getElementById('state');
+  [...states].sort().forEach(s=>stSel.innerHTML+=`<option value="${s}">${s}</option>`);
+  const q=document.getElementById('qtr');
+  PANEL.quarters.forEach((qq,i)=>q.innerHTML += `<option value="${i}" ${i===QTR_DEFAULT?'selected':''}>${qq}</option>`);
+  document.getElementById('meta').textContent=`${Object.keys(PANEL.banks).length.toLocaleString()} banks · deposit x-ray`;
+  recompute();
+}
+
+function getRecs(qIdx){
+  const recs=[];
+  for(const cert in PANEL.banks){
+    const b=PANEL.banks[cert];const m=b._meta||{};
+    if(m.active!=='1')continue;
+    const dep=b.DEP?.[qIdx];
+    const core=b.COREDEP?.[qIdx];
+    const lga=b.DEPLGAMT?.[qIdx];
+    const uni=b.DEPI?.[qIdx]; const ins=b.DEPINS?.[qIdx];
+    const nc=b.NCOREQ1?.[qIdx];
+    const asset=b.ASSET?.[qIdx];
+    const coreP = (dep && core!=null)?core/dep*100:null;
+    const lgP = (dep && lga!=null)?lga/dep*100:null;
+    const unP = (dep && uni!=null)?uni/dep*100:null;
+    recs.push({cert,name:m.name,state:m.state,asset,dep,core,lga,uni,ins,
+      coreP,lgP,unP,ncP:nc});
+  }
+  return recs;
+}
+
+function applyFilters(recs){
+  const st=document.getElementById('state').value;
+  const minA=+document.getElementById('minAsset').value*1000;
+  const q=document.getElementById('searchBank').value.trim().toLowerCase();
+  return recs.filter(r=>{
+    if(st && r.state!==st) return false;
+    if(minA && (!r.asset || r.asset<minA)) return false;
+    if(q && !((r.name||'').toLowerCase().includes(q)||r.cert.toString().includes(q))) return false;
+    return true;
+  });
+}
+
+function renderHeader(recs){
+  const unT=+document.getElementById('unThr').value;
+  const ncT=+document.getElementById('ncThr').value;
+  const un=recs.filter(r=>r.unP!=null && r.unP>unT).length;
+  const nc=recs.filter(r=>r.ncP!=null && r.ncP>ncT).length;
+  const both=recs.filter(r=>r.unP!=null && r.unP>unT && r.ncP!=null && r.ncP>ncT).length;
+  document.getElementById('kBanks').textContent=recs.length.toLocaleString();
+  document.getElementById('kUn').textContent=un.toLocaleString();
+  document.getElementById('kNc').textContent=nc.toLocaleString();
+  document.getElementById('kBoth').textContent=both.toLocaleString();
+}
+
+function compBar(r){
+  const c = Math.max(0,Math.min(100, r.coreP||0));
+  const lg = Math.max(0,Math.min(100-c, r.lgP||0));
+  const un = Math.max(0,Math.min(100-c-lg, r.unP||0));
+  const rest = Math.max(0,100 - c - lg - un);
+  return `<div class="composition" title="core ${c.toFixed(0)}% · large ${lg.toFixed(0)}% · uninsured ${un.toFixed(0)}%">
+    <span style="width:${c}%;background:#34d399"></span>
+    <span style="width:${lg}%;background:#9d7cff"></span>
+    <span style="width:${un}%;background:#fb7185"></span>
+    <span style="width:${rest}%;background:rgba(120,148,210,.18)"></span>
+  </div>`;
+}
+
+function renderTable(recs){
+  const dir=sortDir==='desc'?-1:1;const k=sortKey;
+  recs.sort((a,b)=>{const av=a[k],bv=b[k];if(typeof av==='string')return dir*((av||'').localeCompare(bv||''));return dir*((av==null?-Infinity:av)-(bv==null?-Infinity:bv))});
+  const cap=recs.slice(0,500);
+  const tb=document.querySelector('#rank tbody');
+  const unT=+document.getElementById('unThr').value;
+  const ncT=+document.getElementById('ncThr').value;
+  tb.innerHTML=cap.map(r=>{
+    return `<tr data-cert="${r.cert}">
+      <td class="bank">${esc(r.name||'')}</td>
+      <td>${r.state||''}</td>
+      <td class="num">${num(r.asset/1000)}</td>
+      <td class="num">${num(r.dep/1000)}</td>
+      <td>${compBar(r)}</td>
+      <td class="num">${r.coreP==null?'—':r.coreP.toFixed(0)}</td>
+      <td class="num">${r.lgP==null?'—':r.lgP.toFixed(0)}</td>
+      <td class="num" style="${r.unP>unT?'color:#fca5a5;font-weight:600':''}">${r.unP==null?'—':r.unP.toFixed(0)}</td>
+      <td class="num" style="${r.ncP>ncT?'color:#fdba74;font-weight:600':''}">${r.ncP==null?'—':r.ncP.toFixed(1)}</td>
+    </tr>`;
+  }).join('');
+  tb.querySelectorAll('tr').forEach(tr=>tr.addEventListener('click',()=>{
+    document.querySelectorAll('#rank tr').forEach(x=>x.classList.remove('selected'));
+    tr.classList.add('selected');
+    showDetail(+tr.dataset.cert);
+  }));
+}
+
+function showDetail(cert){
+  const b=PANEL.banks[cert];if(!b)return;const m=b._meta||{};
+  const qIdx=+document.getElementById('qtr').value;
+  const dep=b.DEP?.[qIdx];const core=b.COREDEP?.[qIdx];const lga=b.DEPLGAMT?.[qIdx];
+  const uni=b.DEPI?.[qIdx];const ins=b.DEPINS?.[qIdx];const nc=b.NCOREQ1?.[qIdx];
+  const coreP=dep&&core!=null?core/dep*100:null;
+  const lgP=dep&&lga!=null?lga/dep*100:null;
+  const unP=dep&&uni!=null?uni/dep*100:null;
+
+  document.getElementById('detail').innerHTML=`
+    <h3 class="bn">${esc(m.name||'')}</h3>
+    <div class="sub">CERT ${cert} · ${m.city||''}, ${m.state||''} · ${PANEL.quarters[qIdx]}</div>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <a href="bank_profile.html?cert=${cert}" style="flex:1;text-align:center;padding:7px 10px;border:1px solid var(--border);border-radius:7px;color:var(--text-dim);text-decoration:none;font-size:11.5px;font-family:'JetBrains Mono',monospace">Full profile →</a>
+      <a href="liquidity_monitor.html" style="flex:1;text-align:center;padding:7px 10px;border:1px solid var(--border);border-radius:7px;color:var(--text-dim);text-decoration:none;font-size:11.5px;font-family:'JetBrains Mono',monospace">Liquidity →</a>
+    </div>
+    <div class="section-lbl">Deposit structure · ${PANEL.quarters[qIdx]}</div>
+    <div class="kv-grid">
+      <div class="kv"><div class="l">Total deposits</div><div class="v">${dep==null?'—':'$'+fmtM(dep)}</div></div>
+      <div class="kv"><div class="l">Core deposits</div><div class="v">${coreP==null?'—':coreP.toFixed(1)+'%'}</div></div>
+      <div class="kv"><div class="l">Large-depositor share</div><div class="v">${lgP==null?'—':lgP.toFixed(1)+'%'}</div></div>
+      <div class="kv"><div class="l">Uninsured share</div><div class="v">${unP==null?'—':unP.toFixed(1)+'%'}</div></div>
+      <div class="kv"><div class="l">Noncore funding</div><div class="v">${nc==null?'—':nc.toFixed(1)+'%'}</div></div>
+      <div class="kv"><div class="l">Insured deposits</div><div class="v">${ins==null?'—':'$'+fmtM(ins)}</div></div>
+    </div>
+
+    <div class="section-lbl">Composition · snapshot</div>
+    <canvas id="pie" height="160"></canvas>
+
+    <div class="section-lbl">Core deposit share · 8 quarters</div>
+    <canvas id="trend" height="140"></canvas>
+  `;
+
+  const coreAmt=core||0;const lgAmt=lga||0;const unAmt=uni||0;
+  const other=Math.max(0,(dep||0)-coreAmt-lgAmt-unAmt);
+  new Chart(document.getElementById('pie'),{type:'doughnut',data:{labels:['Core','Large dep','Uninsured','Other'],datasets:[
+    {data:[coreAmt,lgAmt,unAmt,other],backgroundColor:['#34d399','#9d7cff','#fb7185','rgba(120,148,210,.35)'],borderWidth:0}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10.5}}}}}});
+
+  const coreSeries=(b.COREDEP||[]).map((v,i)=>{const d=b.DEP?.[i];return d?v/d*100:null});
+  new Chart(document.getElementById('trend'),{type:'line',data:{labels:PANEL.quarters,datasets:[
+    {label:'Core dep (%)',data:coreSeries,borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,.08)',borderWidth:2,pointRadius:3,tension:.25,fill:true}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(120,148,210,.06)'}},y:{grid:{color:'rgba(120,148,210,.06)'},ticks:{callback:v=>v+'%'}}}}});
+}
+
+function recompute(){
+  document.getElementById('minAssetV').textContent=(+document.getElementById('minAsset').value).toLocaleString();
+  document.getElementById('unThrV').textContent=document.getElementById('unThr').value;
+  document.getElementById('ncThrV').textContent=document.getElementById('ncThr').value;
+  const qIdx=+document.getElementById('qtr').value;
+  const recs=getRecs(qIdx);
+  const filtered=applyFilters(recs);
+  renderHeader(filtered);
+  renderTable(filtered);
+}
+
+function num(v){if(v==null||isNaN(v))return '—';return Number(v).toLocaleString(undefined,{maximumFractionDigits:0})}
+function fmtM(v){if(v>=1e6)return (v/1e6).toFixed(2)+'B';return (v/1000).toFixed(1)+'M'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+['qtr','state'].forEach(id=>document.getElementById(id).addEventListener('change',recompute));
+['minAsset','unThr','ncThr'].forEach(id=>document.getElementById(id).addEventListener('input',recompute));
+document.getElementById('searchBank').addEventListener('input',recompute);
+document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>{
+  const k=th.dataset.sort;if(sortKey===k)sortDir=(sortDir==='desc'?'asc':'desc');else{sortKey=k;sortDir='desc'}
+  recompute();
+}));
+
+loadData().catch(e=>{
+  document.getElementById('errBox').innerHTML=`<div class="err"><b>Could not load data.</b><br>Serve over HTTP: <code>python3 -m http.server 8765</code>.<br>Error: ${e.message}</div>`;
+});
+</script>
+<script src="theme.js"></script>
+</body>
+</html>
